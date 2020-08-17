@@ -54,7 +54,7 @@ namespace BepInEx_Extensions.Tests
         public ConfigEntry<TestEnum> ModelValue8 { get; set; }
 
         //Constructor call, you normally leave this blank.
-        public ConfigModelTests(ConfigFile file, ManualLogSource logger = null, string section) : base(file, logger, section) { }
+        public ConfigModelTests(ConfigFile file, ManualLogSource logger = null, string section = null) : base(file, logger, section) { }
 
         //-----Virtual helper method examples-----//
 
@@ -121,16 +121,16 @@ namespace BepInEx_Extensions.Tests
             try
             {
                 ConfigModelTests cmt = new ConfigModelTests(file, logger, "TestSection");
-                logger.LogInfo("ConfigModelTest: ModelName = " + cmt.ModelName.Value);
-                logger.LogInfo("ConfigModelTest: ModelValue1 = " + cmt.ModelValue1.Value);
-                logger.LogInfo("ConfigModelTest: ModelValue2 = " + cmt.ModelValue2.Value);
-                logger.LogInfo("ConfigModelTest: ModelValue3 = " + cmt.ModelValue3.Value);
-                logger.LogInfo("ConfigModelTest: ModelValue4 = " + cmt.ModelValue4.Value);
-                logger.LogInfo("ConfigModelTest: ModelValue5 = " + cmt.ModelValue5.Value);
-                logger.LogInfo("ConfigModelTest: ModelValue6 = " + cmt.ModelValue6.Value);
-                logger.LogInfo("ConfigModelTest: ModelValue7 = " + cmt.ModelValue7.Value);
-                logger.LogInfo("ConfigModelTest: ModelValue8 = " + cmt.ModelValue8.Value);
-                logger.LogInfo("ModelTesterPlugin::Awake() | TypeOf(cmt)=" + cmt.GetType());
+                logger.LogInfo($"ModelTesterPlugin::Awake() | TypeOf({nameof(cmt)})={cmt.GetType()}");
+                logger.LogInfo($"ConfigModelTest: ModelName = {cmt.ModelName.Value}");
+                logger.LogInfo($"ConfigModelTest: ModelValue1 = {cmt.ModelValue1.Value}");
+                logger.LogInfo($"ConfigModelTest: ModelValue2 = {cmt.ModelValue2.Value}");
+                logger.LogInfo($"ConfigModelTest: ModelValue3 = {cmt.ModelValue3.Value}");
+                logger.LogInfo($"ConfigModelTest: ModelValue4 = {cmt.ModelValue4.Value}");
+                logger.LogInfo($"ConfigModelTest: ModelValue5 = {cmt.ModelValue5.Value}");
+                logger.LogInfo($"ConfigModelTest: ModelValue6 = {cmt.ModelValue6.Value}");
+                logger.LogInfo($"ConfigModelTest: ModelValue7 = {cmt.ModelValue7.Value}");
+                logger.LogInfo($"ConfigModelTest: ModelValue8 = {cmt.ModelValue8.Value}");
             }
             catch (TargetException te)
             {

@@ -19,27 +19,27 @@ namespace BepInEx_Extensions.Configuration
         /// Create and bind the Config Data Model to the supplied ConfigFile. Binding is automatic and immediate on instantiation.
         /// </summary>
         /// <param name="file">The configuration file to bind to.</param>
+        /// <param name="logger">The BepInEx Logger to be used. If ommitted, a default instance of the logger will be used that is shared by all ConfigFileModel instances.</param>
         /// <param name="sectionName">The section name that this model will appear under in the ConfigFile. The ConfigModelSectionName attribute will be used if this is set to null/ommitted.</param>
         public ConfigFileModel(ConfigFile file, ManualLogSource logger = null, string sectionName = null)
         {
-            if (logger == null)
-            {
-                logger = BepInEx.Logging.Logger.CreateLogSource("BepInEx_Extensions::ConfigFileModel.Default");
-            }
+            if (_StaticLogger == null)
+                _StaticLogger = BepInEx.Logging.Logger.CreateLogSource("ConfigFileModel_DefaultLogger");
 
-            this.Logger = logger;
+            if (logger == null)
+                Logger = _StaticLogger;
+            else
+                Logger = logger;
+
             try
             {
                 if (sectionName==null)
                 {
-#if NET_35
                     sectionName = ((ConfigModelSectionName)this.GetType().GetCustomAttributes(typeof(ConfigModelSectionName), true)[0])?.Value;
-#else
-                    sectionName = this.GetType().GetCustomAttribute<ConfigModelSectionName>()?.Value;
-#endif
+
                     if (sectionName == null || sectionName == "")
                     {
-                        Logger.LogError(this.GetType().Name + " | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string?");
+                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string?");
                     }
                     else
                     {
@@ -48,17 +48,13 @@ namespace BepInEx_Extensions.Configuration
                         //Post Init: register Event Handlers.
                         file.ConfigReloaded += OnConfigReloaded;
                         file.SettingChanged += OnSettingsChanged;
-
                     }
                 }
             }
             catch (Exception e)
             {
-                Logger.LogError(this.GetType().Name + " | Constructor Error: ");
+                Logger.LogError($"{GetType().Name} | Constructor Error: ");
                 Logger.LogError(e.Message);
-#if DEBUG
-                Logger.LogError(e.StackTrace);
-#endif
             }
 
         }
@@ -70,11 +66,32 @@ namespace BepInEx_Extensions.Configuration
         /// <param name="sectionName">The section name in the config file this Data model will be placed under.</param>
         private void InitAndBindConfigs(ConfigFile file, string sectionName)
         {
-
-#if DEBUG
-            Logger.Log("ConfigFileModel | Current Type: " + GetType().Name);
-#endif
+            //Use Reflection to get all of the Property Members.
             PropertyInfo[] propertyInfos = GetType().GetProperties();
+
+            //The generic version of ConfigFile.Bind<T>()
+            MethodInfo genericBindMethod = 
+                typeof(ConfigFile)
+                .GetMethods().FirstOrDefault(
+                    m => m.GetParameters().Count() == 4
+                    && m.GetParameters()[0].ParameterType == typeof(string)
+                    && m.GetParameters()[1].ParameterType == typeof(string)
+                    && m.GetParameters()[3].ParameterType == typeof(ConfigDescription)
+                );
+
+            //The generic version of PrePropertyBind<T>()
+            MethodInfo genericPreBindMethod = 
+                GetType().GetMethod(
+                    nameof(PrePropertyBind),
+                    BindingFlags.Instance
+                );
+
+            //The generic version of PostPropertyBind<T>()
+            MethodInfo genericPostBindMethod =
+                GetType().GetMethod(
+                    nameof(PostPropertyBind),
+                    BindingFlags.Instance
+                );
 
             foreach (PropertyInfo property in propertyInfos)
             {
@@ -86,58 +103,39 @@ namespace BepInEx_Extensions.Configuration
                         Type configEntryInstanceType = property.PropertyType.GetGenericArguments()[0];
 
                         //Get the default description and warn/log and set defaults on failure. 
-#if NET_35
                         string descriptionString = ((ConfigEntryDescription)property.GetCustomAttributes(typeof(ConfigEntryDescription), false)[0])?.Value;
-#else
-                        string description = property.GetCustomAttribute<ConfigEntryDescription>()?.Value;
-#endif
+
                         if (descriptionString == null)
                         {
-                            Logger.LogWarning(this.GetType().Name + "." + property.Name + ": Could not get default description from attribute. Using default.");
+                            Logger.LogWarning($"{GetType().Name}.{property.Name}: Could not get default description from attribute. Using default.");
                             descriptionString = "<No Description Available>";
                         }
 
                         ConfigDescription cfgDescription = new ConfigDescription(descriptionString);
 
                         //Get the default value and warn/log and set defaults on failure. 
-#if NET_35
                         var defaultValueRaw = ((ConfigEntryDefaultValue)property.GetCustomAttributes(typeof(ConfigEntryDefaultValue), false)[0])?.Value;
-#else
-                        var defaultValueRaw = property.GetCustomAttribute<ConfigDefaultValue>()?.Value;
-#endif
+
                         object defaultValue;
                         if(defaultValueRaw == null)
                         {
                             defaultValue = Activator.CreateInstance(configEntryInstanceType);
-                            Logger.LogWarning(this.GetType().Name + "." + property.Name + ": Could not get default value from attribute. Using default.");
+                            Logger.LogWarning($"{GetType().Name}.{property.Name}: Could not get default value from attribute. Using default.");
                         }
 
                         defaultValue = Convert.ChangeType(defaultValueRaw, configEntryInstanceType); //Needs to be converted regardless of Activator. Otherwise MakeGenericMethod does not resolve T properly for some reason.
 
                         //Key value
-#if NET_35
                         string key = ((ConfigEntryKey)property.GetCustomAttributes(typeof(ConfigEntryKey), false)[0])?.Value;
-#else
-                        string key = property.GetCustomAttribute<ConfigEntryKey>()?.Value;
-#endif
+
                         if (key == null || key  == "")
-                        {
                             key = property.Name;
-#if DEBUG
-                            Logger.LogWarning(this.GetType().Name + "." + property.Name + " | Key Attribute missing. Using default.");
-#endif
-                        }
 
                         //should we call ConfigFile.Bind()?
                         bool useStandardPropertyBinding = true;
 
                         //Make generic for Pre and Post Property binding methods
-                        MethodInfo prePropertyBindGeneric =
-                            GetType().GetMethod(
-                                nameof(PrePropertyBind),
-                                BindingFlags.Instance
-                                )
-                            .MakeGenericMethod(configEntryInstanceType);
+                        MethodInfo instancedGenericPrePropertyBind = genericPreBindMethod.MakeGenericMethod(configEntryInstanceType);
 
                         object[] modParams = new object[]
                         {
@@ -150,7 +148,7 @@ namespace BepInEx_Extensions.Configuration
                             useStandardPropertyBinding
                         };
 
-                        prePropertyBindGeneric.Invoke(this, modParams);
+                        instancedGenericPrePropertyBind.Invoke(this, modParams);
 
                         //Reassignment
                         sectionName = (string)modParams[1];
@@ -164,40 +162,24 @@ namespace BepInEx_Extensions.Configuration
                         if (useStandardPropertyBinding)
                         {
                             //Get generic for ConfigFile.Bind<T>()
-                            MethodInfo genericConfigBind = typeof(ConfigFile)
-                                .GetMethods().FirstOrDefault(
-                                    m => m.GetParameters().Count() == 4
-                                    && m.GetParameters()[0].ParameterType == typeof(string)
-                                    && m.GetParameters()[1].ParameterType == typeof(string)
-                                    && m.GetParameters()[3].ParameterType == typeof(ConfigDescription)
-                                )
-                                .MakeGenericMethod(configEntryInstanceType);
+                            MethodInfo instancedGenericConfigBind = genericBindMethod.MakeGenericMethod(configEntryInstanceType);
 
                             //Get generic for PostBindingCalls
-                            MethodInfo postPropertyBindGeneric =
-                                GetType().GetMethod(
-                                    nameof(PostPropertyBind),
-                                    BindingFlags.Instance
-                                    )
-                                .MakeGenericMethod(configEntryInstanceType);
+                            MethodInfo instancedGenericPostPropertyBind = genericPostBindMethod.MakeGenericMethod(configEntryInstanceType);
 
                             // Bind the property.
-                            var configBind = genericConfigBind.Invoke(this, new object[] { 
+                            var configBind = instancedGenericConfigBind.Invoke(this, new object[] { 
                                 sectionName,
                                 key,
                                 defaultValue,
                                 cfgDescription
                             });
 
-#if NET_35
                             property.SetValue(this, configBind, null); 
                             var currentValue = property.GetValue(this, null);
-#else
-                            property.SetValue(this, configBind);
-                            var currentValue = property.GetValue(this);
-#endif
+
                             // Call post binding hook
-                            postPropertyBindGeneric.Invoke(this, new object[] { 
+                            instancedGenericPostPropertyBind.Invoke(this, new object[] { 
                                 currentValue,
                                 sectionName,
                                 key,
@@ -207,11 +189,8 @@ namespace BepInEx_Extensions.Configuration
                     }
                     catch (Exception e)
                     {
-                        Logger.LogError(this.GetType().Name + " | Initialization error for: " + property.Name);
+                        Logger.LogError($"{this.GetType().Name} | Initialization error for: {property.Name}");
                         Logger.LogError(e.Message);
-#if DEBUG
-                        Logger.LogError(e.StackTrace);
-#endif
                     }
                 }
             }
@@ -261,6 +240,7 @@ namespace BepInEx_Extensions.Configuration
         /// <param name="args">SettingsChanged data passed from the BepInEx event. For more info, see: [BepInEx.Configuration.SettingChangedEventArgs].</param>
         public virtual void OnSettingsChanged(object sender, BepInEx.Configuration.SettingChangedEventArgs args) { }
 
+        protected static ManualLogSource _StaticLogger { get; private set; }
         protected ManualLogSource Logger { get; set; }
     } 
 }
