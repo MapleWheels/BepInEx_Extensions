@@ -4,70 +4,122 @@ using System;
 using System.Reflection;
 using BepInEx_Extensions.Configuration;
 
+/// <author> PerfidiousLeaf </author>
+/// <date>2020-08-13</date>
 namespace BepInEx_Extensions.Tests
 {
     /// <summary>
     /// A ConfigFileModel example use case and model test.
     /// </summary>
-    /// <author> PerfidiousLeaf </author>
-    /// <date>2020-08-13</date>
-    /// <version>1.0.0</version>
+    [ConfigModelSectionName(Value = "This_Is_An_Example_Test_Section")]
     public class ConfigModelTests : ConfigFileModel
     {
 
-        [ConfigEntryDesc(Value = "This is the model's name")]
-        [ConfigDefaultValue(Value = "Model A")]
+        [ConfigEntryDescription(Value = "This is the model's name")]
+        [ConfigEntryDefaultValue(Value = "Model A")]
         public ConfigEntry<string> ModelName { get; set; }
 
-        [ConfigEntryDesc(Value = "This is the model's first value")]
-        [ConfigDefaultValue(Value = 10)]
+        [ConfigEntryDescription(Value = "This is the model's first value")]
+        [ConfigEntryDefaultValue(Value = 10)]
         public ConfigEntry<int> ModelValue1 { get; set; }
 
-        [ConfigEntryDesc(Value = "This is the model's second value")]
-        [ConfigDefaultValue(Value = 5f)]
+        //An entry with a custom config file key, 
+        //custom keys are not required; the property/variable name will be used instead if not set.
+        [ConfigEntryDescription(Value = "This is the model's second value, with a custom key.")]
+        [ConfigEntryKey(Value = "CustomKey_ModelValue2")]
+        [ConfigEntryDefaultValue(Value = 5f)]
         public ConfigEntry<float> ModelValue2 { get; set; }
 
         //test with no entry description
-        [ConfigDefaultValue(Value = 2)]
+        [ConfigEntryDefaultValue(Value = 2)]
         public ConfigEntry<int> ModelValue3 { get; set; }
         //test with no default value
-        [ConfigEntryDesc(Value = "Hello")]
+        [ConfigEntryDescription(Value = "Hello")]
         public ConfigEntry<int> ModelValue4 { get; set; }
         //Enum tests
-        [ConfigEntryDesc(Value = "This is an Enum")]
-        [ConfigDefaultValue(Value = ItemIndex.Syringe)]
-        public ConfigEntry<ItemIndex> ModelValue5 { get; set; }
+        [ConfigEntryDescription(Value = "This is an Enum")]
+        [ConfigEntryDefaultValue(Value = TestEnum.IndexA)]
+        public ConfigEntry<TestEnum> ModelValue5 { get; set; }
         //Unsupported Type test + wrong default value type
-        [ConfigEntryDesc(Value = "This is an unsupported Object")]
-        [ConfigDefaultValue(Value = 20)]
-        public ConfigEntry<CharacterBody> ModelValue6 { get; set; }
+        [ConfigEntryDescription(Value = "This is an unsupported Object")]
+        [ConfigEntryDefaultValue(Value = 20)]
+        public ConfigEntry<object> ModelValue6 { get; set; }
         //Wrong default value type test: primitives
-        [ConfigEntryDesc(Value = "This is primitive type with the wrong default value")]
-        [ConfigDefaultValue(Value = 1.5f)]
+        [ConfigEntryDescription(Value = "This is primitive type with the wrong default value")]
+        [ConfigEntryDefaultValue(Value = 1.5f)]
         public ConfigEntry<int> ModelValue7 { get; set; }
         //Wrong default value type test: enum
-        [ConfigEntryDesc(Value = "This is an Enum")]
-        [ConfigDefaultValue(Value = 2000)]
-        public ConfigEntry<ItemIndex> ModelValue8 { get; set; }
+        [ConfigEntryDescription(Value = "This is an Enum with a bad default value")]
+        [ConfigEntryDefaultValue(Value = 2000)]
+        public ConfigEntry<TestEnum> ModelValue8 { get; set; }
 
-        public ConfigModelTest(ConfigFile file, string section) : base(file, section) { }
+        //Constructor call, you normally leave this blank.
+        public ConfigModelTests(ConfigFile file, string section) : base(file, section) { }
 
+        //-----Virtual helper method examples-----//
+
+        /// <summary>
+        /// An example of OnModelCreate. This is called in the constructor and can be used to modify the ConfigFile settings and section name before properties are bound. Typically used to change the section name from what is set in the attributes.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <param name="sectionName"></param>
+        protected override void OnModelCreate(ConfigFile file, ref string sectionName)
+        {
+            //base.OnModelCreate(file, ref sectionName); //This does nothing and can be ommitted.
+        }
+
+        /// <summary>
+        /// This is called on each ConfigEntry<> property BEFORE it is linked/bound to the Config File. You can choose to optionally skip the standard binding process altogether by setting [useStandardBindingMethod=false]. You can use this to change basically everything but the Type of the default value. You will need to make use of Reflection or IF statements to handle [defaultValue].
+        /// </summary>
+        protected override void PrePropertyBind<T>(PropertyInfo property, ref string sectionName, ref string key, ref T defaultValue, ConfigDescription description, ref ConfigFile file, ref bool useStandardBindingMethod)
+        {
+            //base.PrePropertyBind(property, ref sectionName, ref key, ref defaultValue, description, ref file, ref useStandardBindingMethod); //This does nothing and can be ommitted.
+        }
+
+        /// <summary>
+        /// This is called on each ConfigEntry<> property AFTER it has been linked/bound via ConfigFile.Bind(). Note that changes made here will NOT affect the value if the ConfigEntry<> property itself. This is intended to be used for other setup purposes that rely on the property's config file value. You will need to make use of Reflection or IF statements to handle [value].
+        /// </summary>
+        protected override void PostPropertyBind<T>(T value, string sectionName, string key, ConfigFile file)
+        {
+            //base.PostPropertyBind(value, sectionName, key, file); //This does nothing and can be ommitted.
+        }
+
+        /// <summary>
+        /// An event hook for ConfigFile.configReloaded. This is called whenever BepInEx reloads all configuration files.
+        /// </summary>
+        public override void OnConfigReloaded(object sender, EventArgs e)
+        {
+            //base.OnConfigReloaded(sender, e); //This does nothing and can be ommitted.
+        }
+
+        /// <summary>
+        /// An event hook for ConfigFile.settingChanged. This is called whenever BepInEx's internal configuration settings have been changed.
+        /// </summary>
+        public override void OnSettingsChanged(object sender, SettingChangedEventArgs args)
+        {
+            //base.OnSettingsChanged(sender, args); //This does nothing and can be ommitted.
+        }
     }
+
+    public enum TestEnum
+    {
+        IndexA = -1,
+        IndexB = 0,
+        IndexC = 1,
+        IndexD = 2
+    }
+
 
     /// <summary>
     /// A quick test of the ConfigFileModel system.
     /// </summary>
-    /// <author> PerfidiousLeaf </author>
-    /// <date>2020-08-13</date>
-    /// <version>1.0.0</version>
-    [BepInPlugin("ca.tbn.expermental", "BepinEx_ConfigModelFiles", "0.0.1")]
-    public class ModelTesterPlugin : BaseUnityPlugin
+    public class ModelTesterPlugin
     {
-        void Awake()
+        public void Test(ConfigFile file)
         {
             try
             {
-                ConfigModelTest cmt = new ConfigModelTest(Config, "TestSection");
+                ConfigModelTests cmt = new ConfigModelTests(file, "TestSection");
                 UnityEngine.Debug.Log("ConfigModelTest: ModelName = " + cmt.ModelName.Value);
                 UnityEngine.Debug.Log("ConfigModelTest: ModelValue1 = " + cmt.ModelValue1.Value);
                 UnityEngine.Debug.Log("ConfigModelTest: ModelValue2 = " + cmt.ModelValue2.Value);

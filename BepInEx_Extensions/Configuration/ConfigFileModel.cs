@@ -9,6 +9,8 @@ namespace BepInEx_Extensions.Configuration
 {
     /// <summary>
     /// This class is designed to allow Attribute-based Configuration File definitions, similar to Entity Framework's DbContext files. WARNING: All members must be declared as Properties with "get"/"set". Fields will not be detected. Usage: Extend/Derive this class and define all of your ConfigEntry<T> variables as Properties (with get/set). Then just instantiate the class and all members will be auto-bound.
+    /// 
+    /// To us ethis class. Simply inherit it and declare ConfigEntry<> properties (add { get; set; }) along with description attributes. See ConfigModelTests for a more detailed example.
     /// </summary>
     public class ConfigFileModel
     {
