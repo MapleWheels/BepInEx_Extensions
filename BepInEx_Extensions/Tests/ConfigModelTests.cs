@@ -65,6 +65,7 @@ namespace BepInEx_Extensions.Tests
         /// <param name="sectionName"></param>
         protected override void OnModelCreate(ConfigFile file, ref string sectionName)
         {
+            sectionName = "Example_Section";
             //base.OnModelCreate(file, ref sectionName); //This does nothing and can be ommitted.
         }
 
@@ -72,7 +73,7 @@ namespace BepInEx_Extensions.Tests
         /// This is called on each ConfigEntry<> property BEFORE it is linked/bound to the Config File. You can choose to optionally skip the standard binding process altogether by setting [useStandardBindingMethod=false]. You can use this to change basically everything but the Type of the default value. You will need to make use of Reflection or IF statements to handle [defaultValue].
         /// </summary>
         protected override void PrePropertyBind<T>(PropertyInfo property, ref string sectionName, ref string key, ref T defaultValue, ConfigDescription description, ref ConfigFile file, ref bool useStandardBindingMethod)
-        {
+        {           
             //base.PrePropertyBind(property, ref sectionName, ref key, ref defaultValue, description, ref file, ref useStandardBindingMethod); //This does nothing and can be ommitted.
         }
 
@@ -111,7 +112,7 @@ namespace BepInEx_Extensions.Tests
 
 
     /// <summary>
-    /// A quick test of the ConfigFileModel system.
+    /// A quick test of the ConfigFileModel system. NOTE/TODO: Refactor tests to be more thoughrough. NOTE: Unit Testing package not included to reduce repository bloat. 
     /// </summary>
     public class ModelTesterPlugin
     {
@@ -133,7 +134,7 @@ namespace BepInEx_Extensions.Tests
             }
             catch (TargetException te)
             {
-                UnityEngine.Debug.LogError("ModelTesterPlugin::Awake() | Initalization fail.");
+                UnityEngine.Debug.LogError("ModelTesterPlugin::Test() | Initalization fail.");
                 UnityEngine.Debug.Log(te.Source);
                 UnityEngine.Debug.Log(te.StackTrace);
                 UnityEngine.Debug.Log(te.Message);
@@ -145,7 +146,7 @@ namespace BepInEx_Extensions.Tests
             }
             catch (TypeLoadException tle)
             {
-                UnityEngine.Debug.LogError("ModelTesterPlugin::Awake()");
+                UnityEngine.Debug.LogError("ModelTesterPlugin::Test()");
                 UnityEngine.Debug.LogError(tle.Source);
                 UnityEngine.Debug.LogError(tle.StackTrace);
                 UnityEngine.Debug.LogError(tle.Message);
@@ -157,7 +158,7 @@ namespace BepInEx_Extensions.Tests
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError("ModelTesterPlugin::Awake() | Generic exception.");
+                UnityEngine.Debug.LogError("ModelTesterPlugin::Test() | Generic exception.");
                 UnityEngine.Debug.Log(e.Source);
                 UnityEngine.Debug.Log(e.StackTrace);
                 UnityEngine.Debug.Log(e.Message);
