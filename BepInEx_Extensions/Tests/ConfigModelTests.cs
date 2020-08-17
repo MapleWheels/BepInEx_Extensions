@@ -116,7 +116,7 @@ namespace BepInEx_Extensions.Tests
     /// </summary>
     public class ModelTesterPlugin
     {
-        public void Test(ConfigFile file, ManualLogSource logger)
+        public void Test(ConfigFile file, ManualLogSource logger = null)
         {
             try
             {
