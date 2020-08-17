@@ -15,6 +15,20 @@ namespace BepInEx.Extensions.Configuration
     /// </summary>
     public class ConfigFileModel
     {
+
+        static ConfigFileModel()
+        {
+            //The generic version of ConfigFile.Bind<T>(). Only needs to be resolved once.
+            GenericConfigFileBindMethod =
+                typeof(ConfigFile)
+                .GetMethods().FirstOrDefault(
+                    m => m.GetParameters().Count() == 4
+                    && m.GetParameters()[0].ParameterType == typeof(string)
+                    && m.GetParameters()[1].ParameterType == typeof(string)
+                    && m.GetParameters()[3].ParameterType == typeof(ConfigDescription)
+                );
+        }
+
         /// <summary>
         /// Create and bind the Config Data Model to the supplied ConfigFile. Binding is automatic and immediate on instantiation.
         /// </summary>
@@ -30,19 +44,6 @@ namespace BepInEx.Extensions.Configuration
                 Logger = _StaticLogger;
             else
                 Logger = logger;
-
-            if (GenericConfigFileBindMethod == null) 
-            {
-                //The generic version of ConfigFile.Bind<T>(). Only needs to be resolved once.
-                GenericConfigFileBindMethod =
-                    typeof(ConfigFile)
-                    .GetMethods().FirstOrDefault(
-                        m => m.GetParameters().Count() == 4
-                        && m.GetParameters()[0].ParameterType == typeof(string)
-                        && m.GetParameters()[1].ParameterType == typeof(string)
-                        && m.GetParameters()[3].ParameterType == typeof(ConfigDescription)
-                    );
-            }
 
             try
             {
@@ -246,6 +247,6 @@ namespace BepInEx.Extensions.Configuration
         protected static ManualLogSource _StaticLogger { get; private set; }
         protected ManualLogSource Logger { get; set; }
 
-        protected static MethodInfo GenericConfigFileBindMethod { get; private set; }
+        private static MethodInfo GenericConfigFileBindMethod { get; set; }
     } 
 }
