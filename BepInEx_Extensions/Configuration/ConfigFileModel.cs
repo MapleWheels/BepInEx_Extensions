@@ -1,30 +1,57 @@
 ﻿using BepInEx.Configuration;
 using System;
-using System.Configuration;
 using System.Linq;
 using System.Reflection;
 
-using UnityEngine;
-
+/// <author>PerfidousLeaf | MapleWheels</author>
+/// <date>2020-08-13</date>
 namespace BepInEx_Extensions.Configuration
 {
     /// <summary>
     /// This class is designed to allow Attribute-based Configuration File definitions, similar to Entity Framework's DbContext files. WARNING: All members must be declared as Properties with "get"/"set". Fields will not be detected. Usage: Extend/Derive this class and define all of your ConfigEntry<T> variables as Properties (with get/set). Then just instantiate the class and all members will be auto-bound.
     /// </summary>
-    /// <author> PerfidiousLeaf </author>
-    /// <date>2020-08-13</date>
-    /// <version>1.0.0</version>
     public class ConfigFileModel
     {
         /// <summary>
         /// Create and bind the Config Data Model to the supplied ConfigFile. Binding is automatic and immediate on instantiation.
         /// </summary>
         /// <param name="file">The configuration file to bind to.</param>
-        /// <param name="sectionName">The section name that this model will appear under in the ConfigFile. Intended for use with multiple models in one file.</param>
-        public ConfigFileModel(ConfigFile file, string sectionName)
+        /// <param name="sectionName">The section name that this model will appear under in the ConfigFile. The ConfigModelSectionName attribute will be used if this is set to null/ommitted.</param>
+        public ConfigFileModel(ConfigFile file, string sectionName = null)
         {
-            OnModelCreate(file, ref sectionName);
-            InitAndBindConfigs(file, sectionName);
+            try
+            {
+                if (sectionName==null)
+                {
+#if NET_35
+                    sectionName = ((ConfigModelSectionName)this.GetType().GetCustomAttributes(typeof(ConfigModelSectionName), true)[0])?.Value;
+#else
+                    sectionName = this.GetType().GetCustomAttribute<ConfigModelSectionName>()?.Value;
+#endif
+                    if (sectionName == null || sectionName == "")
+                    {
+                        UnityEngine.Debug.LogError(this.GetType().Name + " | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string?");
+                    }
+                    else
+                    {
+                        OnModelCreate(file, ref sectionName);   //Pre-Init properties
+                        InitAndBindConfigs(file, sectionName);  //Init properties
+                        //Post Init: register Event Handlers.
+                        file.ConfigReloaded += OnConfigReloaded;
+                        file.SettingChanged += OnSettingsChanged;
+
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogError(this.GetType().Name + " | Constructor Error: ");
+                UnityEngine.Debug.LogError(e.Message);
+#if DEBUG
+                UnityEngine.Debug.LogError(e.StackTrace);
+#endif
+            }
+
         }
 
         /// <summary>
@@ -34,120 +61,151 @@ namespace BepInEx_Extensions.Configuration
         /// <param name="sectionName">The section name in the config file this Data model will be placed under.</param>
         private void InitAndBindConfigs(ConfigFile file, string sectionName)
         {
-            try
+
+#if DEBUG
+            UnityEngine.Debug.Log("ConfigFileModel | Current Type: " + GetType().Name);
+#endif
+            PropertyInfo[] propertyInfos = GetType().GetProperties();
+
+            foreach (PropertyInfo property in propertyInfos)
             {
-                UnityEngine.Debug.Log("Current Type: " + GetType().Name);
-
-                string desc;
-                Type genericType;
-                object defaultValRaw;
-                ConfigDescription cfgDesc;
-                PropertyInfo[] propertyInfos = GetType().GetProperties();
-
-                foreach (PropertyInfo property in propertyInfos)
+                if (property.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>))
                 {
-                    if (property.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>))
+                    try
                     {
-                        try
+                        //Get T value from property
+                        Type configEntryInstanceType = property.PropertyType.GetGenericArguments()[0];
+
+                        //Get the default description and warn/log and set defaults on failure. 
+#if NET_35
+                        string descriptionString = ((ConfigEntryDescription)property.GetCustomAttributes(typeof(ConfigEntryDescription), false)[0])?.Value;
+#else
+                        string description = property.GetCustomAttribute<ConfigEntryDescription>()?.Value;
+#endif
+                        if (descriptionString == null)
                         {
-                            //ConfigEntry description string                            
-                            //desc = property.GetCustomAttribute<ConfigEntryDesc>()?.Value; //Net 4.x
-                            desc = ((ConfigEntryDesc)property.GetCustomAttributes(typeof(ConfigEntryDesc), false)[0])?.Value;   //Net 3.5
-                            //The underlying type 'T'
-                            genericType = property.PropertyType.GetGenericArguments()[0];
-                            //The default value if set. Otherwise, use the default value.
-                            //defaultValRaw = property.GetCustomAttribute<ConfigDefaultValue>()?.Value; //Net 4.x
-                            defaultValRaw = ((ConfigDefaultValue)property.GetCustomAttributes(typeof(ConfigDefaultValue), false)[0])?.Value; //Net 3.5
-                            //Set the description if available
-                            cfgDesc = new ConfigDescription(
-                                (desc == null) ? "<No Description>" : desc
-                                );
+                            UnityEngine.Debug.LogWarning(this.GetType().Name + "." + property.Name + ": Could not get default description from attribute. Using default.");
+                            descriptionString = "<No Description Available>";
+                        }
 
-                            UnityEngine.Debug.Log("ConfigFileModel::InitAndBindConfigs() | propertyName=" + property.Name);
-                            UnityEngine.Debug.Log("ConfigFileModel::InitAndBindConfigs() | genericType=" + genericType.Name);
+                        ConfigDescription cfgDescription = new ConfigDescription(descriptionString);
 
-                            //Debugging tests; data logging
+                        //Get the default value and warn/log and set defaults on failure. 
+#if NET_35
+                        var defaultValueRaw = ((ConfigEntryDefaultValue)property.GetCustomAttributes(typeof(ConfigEntryDefaultValue), false)[0])?.Value;
+#else
+                        var defaultValueRaw = property.GetCustomAttribute<ConfigDefaultValue>()?.Value;
+#endif
+                        object defaultValue;
+                        if(defaultValueRaw == null)
+                        {
+                            defaultValue = Activator.CreateInstance(configEntryInstanceType);
+                            UnityEngine.Debug.LogWarning(this.GetType().Name + "." + property.Name + ": Could not get default value from attribute. Using default.");
+                        }
 
-                            MethodInfo bindMethod = typeof(ConfigFile).GetMethods().FirstOrDefault(
-                                m => m.Name == "Bind"
-                                && m.GetParameters()[0].ParameterType == typeof(string)
-                                && m.GetParameters()[1].ParameterType == typeof(string)
-                                && m.GetParameters()[3].ParameterType == typeof(ConfigDescription)
-                                );
+                        defaultValue = Convert.ChangeType(defaultValueRaw, configEntryInstanceType); //Needs to be converted regardless of Activator. Otherwise MakeGenericMethod does not resolve T properly for some reason.
 
-                            MethodInfo bindMethodGeneric = bindMethod.MakeGenericMethod(genericType);
+                        //Key value
+#if NET_35
+                        string key = ((ConfigEntryKey)property.GetCustomAttributes(typeof(ConfigEntryKey), false)[0])?.Value;
+#else
+                        string key = property.GetCustomAttribute<ConfigEntryKey>()?.Value;
+#endif
+                        if (key == null || key  == "")
+                        {
+                            key = property.Name;
+#if DEBUG
+                            UnityEngine.Debug.LogWarning(this.GetType().Name + "." + property.Name + " | Key Attribute missing. Using default.");
+#endif
+                        }
 
-                            if (defaultValRaw == null)
-                            {
-                                defaultValRaw = Convert.ChangeType(Activator.CreateInstance(genericType), genericType);
-                            }
+                        //should we call ConfigFile.Bind()?
+                        bool useStandardPropertyBinding = true;
 
-                            var defaultValue = Convert.ChangeType(defaultValRaw, genericType);
+                        //Make generic for Pre and Post Property binding methods
+                        MethodInfo prePropertyBindGeneric =
+                            GetType().GetMethod(
+                                nameof(PrePropertyBind),
+                                BindingFlags.Instance
+                                )
+                            .MakeGenericMethod(configEntryInstanceType);
 
-                            UnityEngine.Debug.Log("ConfigFileModel::InitAndBindConfigs() | defaultValRaw.Type=" + defaultValRaw.GetType());
-                            UnityEngine.Debug.Log("ConfigFileModel::InitAndBindConfigs() | defaultValue.Type=" + defaultValue.GetType());
+                        object[] modParams = new object[]
+                        {
+                            property,
+                            sectionName,
+                            key,
+                            defaultValue,
+                            cfgDescription,
+                            file,
+                            useStandardPropertyBinding
+                        };
 
-                            var cfgBindInstance = bindMethodGeneric.Invoke(file, new object[] { 
+                        prePropertyBindGeneric.Invoke(this, modParams);
+
+                        //Reassignment
+                        sectionName = (string)modParams[1];
+                        key = (string)modParams[2];
+                        defaultValue = modParams[3];
+                        cfgDescription = (ConfigDescription)modParams[4];
+                        file = (ConfigFile)modParams[5];
+                        useStandardPropertyBinding = (bool)modParams[6];
+
+                        //Standard binding will be used?
+                        if (useStandardPropertyBinding)
+                        {
+                            //Get generic for ConfigFile.Bind<T>()
+                            MethodInfo genericConfigBind = typeof(ConfigFile)
+                                .GetMethods().FirstOrDefault(
+                                    m => m.GetParameters().Count() == 4
+                                    && m.GetParameters()[0].ParameterType == typeof(string)
+                                    && m.GetParameters()[1].ParameterType == typeof(string)
+                                    && m.GetParameters()[3].ParameterType == typeof(ConfigDescription)
+                                )
+                                .MakeGenericMethod(configEntryInstanceType);
+
+                            //Get generic for PostBindingCalls
+                            MethodInfo postPropertyBindGeneric =
+                                GetType().GetMethod(
+                                    nameof(PostPropertyBind),
+                                    BindingFlags.Instance
+                                    )
+                                .MakeGenericMethod(configEntryInstanceType);
+
+                            // Bind the property.
+                            var configBind = genericConfigBind.Invoke(this, new object[] { 
                                 sectionName,
-                                property.Name,
+                                key,
                                 defaultValue,
-                                cfgDesc
+                                cfgDescription
                             });
 
-                            property.SetValue(this, cfgBindInstance);
-
+#if NET_35
+                            property.SetValue(this, configBind, null); 
+                            var currentValue = property.GetValue(this, null);
+#else
+                            property.SetValue(this, configBind);
+                            var currentValue = property.GetValue(this);
+#endif
+                            // Call post binding hook
+                            postPropertyBindGeneric.Invoke(this, new object[] { 
+                                currentValue,
+                                sectionName,
+                                key,
+                                file
+                            });
                         }
-                        catch (TypeLoadException tle)
-                        {
-                            UnityEngine.Debug.Log("ConfigModelTest::InitAndBindConfigs() | Reflection fail.");
-                            UnityEngine.Debug.LogError(tle.Source);
-                            UnityEngine.Debug.LogError(tle.StackTrace);
-                            UnityEngine.Debug.LogError(tle.Message);
-                            UnityEngine.Debug.Log("TypeLoadException: InnerException Data.");
-                            UnityEngine.Debug.Log(tle.InnerException);
-                            UnityEngine.Debug.Log(tle.InnerException?.Source);
-                            UnityEngine.Debug.Log(tle.InnerException?.StackTrace);
-                            UnityEngine.Debug.Log(tle.InnerException?.Message);
-                        }
-                        catch (Exception e)
-                        {
-                            UnityEngine.Debug.Log("ConfigModelTest::InitAndBindConfigs() | Generic Exception.");
-                            UnityEngine.Debug.LogError(e.Source);
-                            UnityEngine.Debug.LogError(e.StackTrace);
-                            UnityEngine.Debug.LogError(e.Message);
-                            UnityEngine.Debug.Log("Exception: InnerException Data.");
-                            UnityEngine.Debug.Log(e.InnerException);
-                            UnityEngine.Debug.Log(e.InnerException?.Source);
-                            UnityEngine.Debug.Log(e.InnerException?.StackTrace);
-                            UnityEngine.Debug.Log(e.InnerException?.Message);
-                        }
+                    }
+                    catch (Exception e)
+                    {
+                        UnityEngine.Debug.LogError(this.GetType().Name + " | Initialization error for: " + property.Name);
+                        UnityEngine.Debug.LogError(e.Message);
+#if DEBUG
+                        UnityEngine.Debug.LogError(e.StackTrace);
+#endif
                     }
                 }
             }
-            catch (TypeLoadException tle)
-            {
-                UnityEngine.Debug.Log("ConfigModelTest::InitAndBindConfigs() | #FOREACH.");
-                UnityEngine.Debug.LogError(tle.Source);
-                UnityEngine.Debug.LogError(tle.StackTrace);
-                UnityEngine.Debug.LogError(tle.Message);
-                UnityEngine.Debug.Log("TypeLoadException: InnerException Data.");
-                UnityEngine.Debug.Log(tle.InnerException);
-                UnityEngine.Debug.Log(tle.InnerException?.Source);
-                UnityEngine.Debug.Log(tle.InnerException?.StackTrace);
-                UnityEngine.Debug.Log(tle.InnerException?.Message);
-            }
-            catch (Exception e)
-            {
-                UnityEngine.Debug.Log("ConfigModelTest::InitAndBindConfigs() | Generic3 Exception.");
-                UnityEngine.Debug.LogError(e.Source);
-                UnityEngine.Debug.LogError(e.StackTrace);
-                UnityEngine.Debug.LogError(e.Message);
-                UnityEngine.Debug.Log("Exception: InnerException Data.");
-                UnityEngine.Debug.Log(e.InnerException);
-                UnityEngine.Debug.Log(e.InnerException?.Source);
-                UnityEngine.Debug.Log(e.InnerException?.StackTrace);
-                UnityEngine.Debug.Log(e.InnerException?.Message);
-            }                
         }
 
         /// <summary>
@@ -158,7 +216,7 @@ namespace BepInEx_Extensions.Configuration
         protected virtual void OnModelCreate(ConfigFile file, ref string sectionName) { }
 
         /// <summary>
-        /// This method is called on every ConfigEntry<> Property Member in the Model-Class before Bind() call is made. You can make changes here to customize anything that you wish before it is bound to the config file. You can even choose to override/skip the binding process altogether. 
+        /// This method is called on every ConfigEntry<> Property Member in the Model-Class before Bind() call is made. You can make changes here to customize anything that you wish before it is bound to the config file. You can even choose to override/skip the binding process altogether. Note: that you must perform the binding yourself in this scenario.
         /// </summary>
         /// <typeparam name="T">The Type of the default value. Same as the [T] in ConfigEntry<T>.</typeparam>
         /// <param name="property">The PropertyInfo of the ConfigEntry<> variable to be bound.</param>
@@ -179,17 +237,19 @@ namespace BepInEx_Extensions.Configuration
         /// <param name="key">The current key used in the config file.</param>
         /// <param name="description">The current description used in the config file.</param>
         /// <param name="file">The ConfigFile used by the Property Member.</param>
-        protected virtual void PostPropertyBind<T>(T value, string sectionName, string key, ConfigDescription description, ConfigFile file) { }
+        protected virtual void PostPropertyBind<T>(T value, string sectionName, string key, ConfigFile file) { }
 
         /// <summary>
         /// Called upon the configuration being reloaded. Triggered by the ConfigFile.ConfigReloaded Event.
         /// </summary>
-        public virtual void OnConfigReloaded() { }
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public virtual void OnConfigReloaded(object sender, EventArgs e) { }
 
         /// <summary>
-        /// Called upon the BepInEx settings being changed. Triggered by the ConfigFile.SettingChanged Event.
-        /// </summary>
+        /// Called upon the BepInEx settings being changed.Triggered by the ConfigFile.SettingChanged Event.
+        /// <param name="sender"></param>
         /// <param name="args">SettingsChanged data passed from the BepInEx event. For more info, see: [BepInEx.Configuration.SettingChangedEventArgs].</param>
-        public virtual void OnSettingsChanged(BepInEx.Configuration.SettingChangedEventArgs args) { }
+        public virtual void OnSettingsChanged(object sender, BepInEx.Configuration.SettingChangedEventArgs args) { }
     } 
 }
