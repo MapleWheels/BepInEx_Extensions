@@ -1,4 +1,5 @@
 ﻿using BepInEx.Configuration;
+using BepInEx.Logging;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -19,8 +20,9 @@ namespace BepInEx_Extensions.Configuration
         /// </summary>
         /// <param name="file">The configuration file to bind to.</param>
         /// <param name="sectionName">The section name that this model will appear under in the ConfigFile. The ConfigModelSectionName attribute will be used if this is set to null/ommitted.</param>
-        public ConfigFileModel(ConfigFile file, string sectionName = null)
+        public ConfigFileModel(ConfigFile file, ManualLogSource logger, string sectionName = null)
         {
+            this.Logger = logger;
             try
             {
                 if (sectionName==null)
@@ -32,7 +34,7 @@ namespace BepInEx_Extensions.Configuration
 #endif
                     if (sectionName == null || sectionName == "")
                     {
-                        UnityEngine.Debug.LogError(this.GetType().Name + " | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string?");
+                        Logger.LogError(this.GetType().Name + " | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string?");
                     }
                     else
                     {
@@ -47,10 +49,10 @@ namespace BepInEx_Extensions.Configuration
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError(this.GetType().Name + " | Constructor Error: ");
-                UnityEngine.Debug.LogError(e.Message);
+                Logger.LogError(this.GetType().Name + " | Constructor Error: ");
+                Logger.LogError(e.Message);
 #if DEBUG
-                UnityEngine.Debug.LogError(e.StackTrace);
+                Logger.LogError(e.StackTrace);
 #endif
             }
 
@@ -65,7 +67,7 @@ namespace BepInEx_Extensions.Configuration
         {
 
 #if DEBUG
-            UnityEngine.Debug.Log("ConfigFileModel | Current Type: " + GetType().Name);
+            Logger.Log("ConfigFileModel | Current Type: " + GetType().Name);
 #endif
             PropertyInfo[] propertyInfos = GetType().GetProperties();
 
@@ -86,7 +88,7 @@ namespace BepInEx_Extensions.Configuration
 #endif
                         if (descriptionString == null)
                         {
-                            UnityEngine.Debug.LogWarning(this.GetType().Name + "." + property.Name + ": Could not get default description from attribute. Using default.");
+                            Logger.LogWarning(this.GetType().Name + "." + property.Name + ": Could not get default description from attribute. Using default.");
                             descriptionString = "<No Description Available>";
                         }
 
@@ -102,7 +104,7 @@ namespace BepInEx_Extensions.Configuration
                         if(defaultValueRaw == null)
                         {
                             defaultValue = Activator.CreateInstance(configEntryInstanceType);
-                            UnityEngine.Debug.LogWarning(this.GetType().Name + "." + property.Name + ": Could not get default value from attribute. Using default.");
+                            Logger.LogWarning(this.GetType().Name + "." + property.Name + ": Could not get default value from attribute. Using default.");
                         }
 
                         defaultValue = Convert.ChangeType(defaultValueRaw, configEntryInstanceType); //Needs to be converted regardless of Activator. Otherwise MakeGenericMethod does not resolve T properly for some reason.
@@ -117,7 +119,7 @@ namespace BepInEx_Extensions.Configuration
                         {
                             key = property.Name;
 #if DEBUG
-                            UnityEngine.Debug.LogWarning(this.GetType().Name + "." + property.Name + " | Key Attribute missing. Using default.");
+                            Logger.LogWarning(this.GetType().Name + "." + property.Name + " | Key Attribute missing. Using default.");
 #endif
                         }
 
@@ -200,10 +202,10 @@ namespace BepInEx_Extensions.Configuration
                     }
                     catch (Exception e)
                     {
-                        UnityEngine.Debug.LogError(this.GetType().Name + " | Initialization error for: " + property.Name);
-                        UnityEngine.Debug.LogError(e.Message);
+                        Logger.LogError(this.GetType().Name + " | Initialization error for: " + property.Name);
+                        Logger.LogError(e.Message);
 #if DEBUG
-                        UnityEngine.Debug.LogError(e.StackTrace);
+                        Logger.LogError(e.StackTrace);
 #endif
                     }
                 }
@@ -253,5 +255,7 @@ namespace BepInEx_Extensions.Configuration
         /// <param name="sender"></param>
         /// <param name="args">SettingsChanged data passed from the BepInEx event. For more info, see: [BepInEx.Configuration.SettingChangedEventArgs].</param>
         public virtual void OnSettingsChanged(object sender, BepInEx.Configuration.SettingChangedEventArgs args) { }
+
+        protected ManualLogSource Logger { get; set; }
     } 
 }

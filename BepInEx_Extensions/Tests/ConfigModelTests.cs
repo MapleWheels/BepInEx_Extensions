@@ -1,8 +1,9 @@
-﻿using BepInEx;
+﻿
 using BepInEx.Configuration;
 using System;
 using System.Reflection;
 using BepInEx_Extensions.Configuration;
+using BepInEx.Logging;
 
 /// <author> PerfidiousLeaf </author>
 /// <date>2020-08-13</date>
@@ -54,7 +55,7 @@ namespace BepInEx_Extensions.Tests
         public ConfigEntry<TestEnum> ModelValue8 { get; set; }
 
         //Constructor call, you normally leave this blank.
-        public ConfigModelTests(ConfigFile file, string section) : base(file, section) { }
+        public ConfigModelTests(ConfigFile file, ManualLogSource logger, string section) : base(file, logger, section) { }
 
         //-----Virtual helper method examples-----//
 
@@ -116,57 +117,57 @@ namespace BepInEx_Extensions.Tests
     /// </summary>
     public class ModelTesterPlugin
     {
-        public void Test(ConfigFile file)
+        public void Test(ConfigFile file, ManualLogSource logger)
         {
             try
             {
-                ConfigModelTests cmt = new ConfigModelTests(file, "TestSection");
-                UnityEngine.Debug.Log("ConfigModelTest: ModelName = " + cmt.ModelName.Value);
-                UnityEngine.Debug.Log("ConfigModelTest: ModelValue1 = " + cmt.ModelValue1.Value);
-                UnityEngine.Debug.Log("ConfigModelTest: ModelValue2 = " + cmt.ModelValue2.Value);
-                UnityEngine.Debug.Log("ConfigModelTest: ModelValue3 = " + cmt.ModelValue3.Value);
-                UnityEngine.Debug.Log("ConfigModelTest: ModelValue4 = " + cmt.ModelValue4.Value);
-                UnityEngine.Debug.Log("ConfigModelTest: ModelValue5 = " + cmt.ModelValue5.Value);
-                UnityEngine.Debug.Log("ConfigModelTest: ModelValue6 = " + cmt.ModelValue6.Value);
-                UnityEngine.Debug.Log("ConfigModelTest: ModelValue7 = " + cmt.ModelValue7.Value);
-                UnityEngine.Debug.Log("ConfigModelTest: ModelValue8 = " + cmt.ModelValue8.Value);
-                UnityEngine.Debug.Log("ModelTesterPlugin::Awake() | TypeOf(cmt)=" + cmt.GetType());
+                ConfigModelTests cmt = new ConfigModelTests(file, logger, "TestSection");
+                logger.LogInfo("ConfigModelTest: ModelName = " + cmt.ModelName.Value);
+                logger.LogInfo("ConfigModelTest: ModelValue1 = " + cmt.ModelValue1.Value);
+                logger.LogInfo("ConfigModelTest: ModelValue2 = " + cmt.ModelValue2.Value);
+                logger.LogInfo("ConfigModelTest: ModelValue3 = " + cmt.ModelValue3.Value);
+                logger.LogInfo("ConfigModelTest: ModelValue4 = " + cmt.ModelValue4.Value);
+                logger.LogInfo("ConfigModelTest: ModelValue5 = " + cmt.ModelValue5.Value);
+                logger.LogInfo("ConfigModelTest: ModelValue6 = " + cmt.ModelValue6.Value);
+                logger.LogInfo("ConfigModelTest: ModelValue7 = " + cmt.ModelValue7.Value);
+                logger.LogInfo("ConfigModelTest: ModelValue8 = " + cmt.ModelValue8.Value);
+                logger.LogInfo("ModelTesterPlugin::Awake() | TypeOf(cmt)=" + cmt.GetType());
             }
             catch (TargetException te)
             {
-                UnityEngine.Debug.LogError("ModelTesterPlugin::Test() | Initalization fail.");
-                UnityEngine.Debug.Log(te.Source);
-                UnityEngine.Debug.Log(te.StackTrace);
-                UnityEngine.Debug.Log(te.Message);
-                UnityEngine.Debug.Log("TargetException: InnerException Data.");
-                UnityEngine.Debug.Log(te.InnerException);
-                UnityEngine.Debug.Log(te.InnerException?.Source);
-                UnityEngine.Debug.Log(te.InnerException?.StackTrace);
-                UnityEngine.Debug.Log(te.InnerException?.Message);
+                logger.LogError("ModelTesterPlugin::Test() | Initalization fail.");
+                logger.LogError(te.Source);
+                logger.LogError(te.StackTrace);
+                logger.LogError(te.Message);
+                logger.LogError("TargetException: InnerException Data.");
+                logger.LogError(te.InnerException);
+                logger.LogError(te.InnerException?.Source);
+                logger.LogError(te.InnerException?.StackTrace);
+                logger.LogError(te.InnerException?.Message);
             }
             catch (TypeLoadException tle)
             {
-                UnityEngine.Debug.LogError("ModelTesterPlugin::Test()");
-                UnityEngine.Debug.LogError(tle.Source);
-                UnityEngine.Debug.LogError(tle.StackTrace);
-                UnityEngine.Debug.LogError(tle.Message);
-                UnityEngine.Debug.Log("TypeLoadException: InnerException Data.");
-                UnityEngine.Debug.Log(tle.InnerException);
-                UnityEngine.Debug.Log(tle.InnerException?.Source);
-                UnityEngine.Debug.Log(tle.InnerException?.StackTrace);
-                UnityEngine.Debug.Log(tle.InnerException?.Message);
+                logger.LogError("ModelTesterPlugin::Test()");
+                logger.LogError(tle.Source);
+                logger.LogError(tle.StackTrace);
+                logger.LogError(tle.Message);
+                logger.LogError("TypeLoadException: InnerException Data.");
+                logger.LogError(tle.InnerException);
+                logger.LogError(tle.InnerException?.Source);
+                logger.LogError(tle.InnerException?.StackTrace);
+                logger.LogError(tle.InnerException?.Message);
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogError("ModelTesterPlugin::Test() | Generic exception.");
-                UnityEngine.Debug.Log(e.Source);
-                UnityEngine.Debug.Log(e.StackTrace);
-                UnityEngine.Debug.Log(e.Message);
-                UnityEngine.Debug.Log("Exception: InnerException Data.");
-                UnityEngine.Debug.Log(e.InnerException);
-                UnityEngine.Debug.Log(e.InnerException?.Source);
-                UnityEngine.Debug.Log(e.InnerException?.StackTrace);
-                UnityEngine.Debug.Log(e.InnerException?.Message);
+                logger.LogError("ModelTesterPlugin::Test() | Generic exception.");
+                logger.LogError(e.Source);
+                logger.LogError(e.StackTrace);
+                logger.LogError(e.Message);
+                logger.LogError("Exception: InnerException Data.");
+                logger.LogError(e.InnerException);
+                logger.LogError(e.InnerException?.Source);
+                logger.LogError(e.InnerException?.StackTrace);
+                logger.LogError(e.InnerException?.Message);
             }
         }
     }
