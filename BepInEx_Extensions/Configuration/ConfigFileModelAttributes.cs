@@ -26,6 +26,7 @@ namespace BepInEx.Extensions.Configuration
     /// <summary>
     /// Intended for use with ConfigEntry<> vars in ConfigFileModel. Used to define the Key/Name that will be used in the config file. The property name will be used instead if this attribute is ommitted.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class ConfigEntryKey : Attribute
     {
         public string Value { get; set; }
@@ -34,7 +35,7 @@ namespace BepInEx.Extensions.Configuration
     /// <summary>
     /// Intended for use with ConfigFileModel. Used to define the section that the ConfigEntry<> properties in the Model-Class will be placed under. Used by ConfigFile.Bind().
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
     public class ConfigModelSectionName : Attribute
     {
         public string Value { get; set; }

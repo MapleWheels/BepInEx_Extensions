@@ -33,27 +33,32 @@ namespace BepInEx.Extensions.Tests
         //test with no entry description
         [ConfigEntryDefaultValue(Value = 2)]
         public ConfigEntry<int> ModelValue3 { get; set; }
+
         //test with no default value
         [ConfigEntryDescription(Value = "Hello")]
         public ConfigEntry<int> ModelValue4 { get; set; }
+
         //Enum tests
         [ConfigEntryDescription(Value = "This is an Enum")]
         [ConfigEntryDefaultValue(Value = TestEnum.IndexA)]
         public ConfigEntry<TestEnum> ModelValue5 { get; set; }
+
         //Unsupported Type test + wrong default value type
         [ConfigEntryDescription(Value = "This is an unsupported Object")]
         [ConfigEntryDefaultValue(Value = 20)]
         public ConfigEntry<object> ModelValue6 { get; set; }
+
         //Wrong default value type test: primitives
-        [ConfigEntryDescription(Value = "This is primitive type with the wrong default value")]
+        [ConfigEntryDescription(Value = "This is primitive type with the wrong default value type")]
         [ConfigEntryDefaultValue(Value = 1.5f)]
         public ConfigEntry<int> ModelValue7 { get; set; }
+
         //Wrong default value type test: enum
         [ConfigEntryDescription(Value = "This is an Enum with a bad default value")]
         [ConfigEntryDefaultValue(Value = 2000)]
         public ConfigEntry<TestEnum> ModelValue8 { get; set; }
 
-        //Constructor call, you normally leave this blank.
+        //Constructor call, you normally leave this empty.
         public ConfigModelTests(ConfigFile file, ManualLogSource logger = null, string section = null) : base(file, logger, section) { }
 
         //-----Virtual helper method examples-----//
