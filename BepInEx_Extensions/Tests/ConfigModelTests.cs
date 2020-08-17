@@ -1,5 +1,4 @@
-﻿
-using BepInEx.Configuration;
+﻿using BepInEx.Configuration;
 using System;
 using System.Reflection;
 using BepInEx_Extensions.Configuration;
@@ -12,7 +11,7 @@ namespace BepInEx_Extensions.Tests
     /// <summary>
     /// A ConfigFileModel example use case and model test.
     /// </summary>
-    [ConfigModelSectionName(Value = "This_Is_An_Example_Test_Section")]
+    [ConfigModelSectionName(Value = "This_Is_An_Example_Test_Section")] //This gets changed in OnModelCreate()
     public class ConfigModelTests : ConfigFileModel
     {
 
@@ -66,7 +65,7 @@ namespace BepInEx_Extensions.Tests
         /// <param name="sectionName"></param>
         protected override void OnModelCreate(ConfigFile file, ref string sectionName)
         {
-            sectionName = "Example_Section";
+            sectionName = "Example_Section";    //Example override of the attribute.
             //base.OnModelCreate(file, ref sectionName); //This does nothing and can be ommitted.
         }
 

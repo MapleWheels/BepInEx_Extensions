@@ -20,8 +20,13 @@ namespace BepInEx_Extensions.Configuration
         /// </summary>
         /// <param name="file">The configuration file to bind to.</param>
         /// <param name="sectionName">The section name that this model will appear under in the ConfigFile. The ConfigModelSectionName attribute will be used if this is set to null/ommitted.</param>
-        public ConfigFileModel(ConfigFile file, ManualLogSource logger, string sectionName = null)
+        public ConfigFileModel(ConfigFile file, ManualLogSource logger = null, string sectionName = null)
         {
+            if (logger == null)
+            {
+                logger = BepInEx.Logging.Logger.CreateLogSource("BepInEx_Extensions::ConfigFileModel.Default");
+            }
+
             this.Logger = logger;
             try
             {
