@@ -165,7 +165,7 @@ namespace BepInEx.Extensions.Configuration
                         if (useStandardPropertyBinding)
                         {
                             //Get generic for ConfigFile.Bind<T>()
-                            MethodInfo instancedGenericConfigBind = genericBindMethod.MakeGenericMethod(configEntryInstanceType);
+                            MethodInfo instancedGenericConfigBind = GenericConfigFileBindMethod.MakeGenericMethod(configEntryInstanceType);
 
                             //Get generic for PostBindingCalls
                             MethodInfo instancedGenericPostPropertyBind = genericPostBindMethod.MakeGenericMethod(configEntryInstanceType);
