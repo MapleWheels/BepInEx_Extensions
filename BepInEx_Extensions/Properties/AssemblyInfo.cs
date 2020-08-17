@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("BepInEx_Extensions")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("A set of helper and utility extensions for BepInEx 5.x")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("PerfidiousLeaf_MapleWheels")]
 [assembly: AssemblyProduct("BepInEx_Extensions")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]

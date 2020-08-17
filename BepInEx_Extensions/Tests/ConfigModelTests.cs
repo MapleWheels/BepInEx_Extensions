@@ -1,12 +1,12 @@
 ﻿using BepInEx.Configuration;
 using System;
 using System.Reflection;
-using BepInEx_Extensions.Configuration;
+using BepInEx.Extensions.Configuration;
 using BepInEx.Logging;
 
 /// <author> PerfidiousLeaf </author>
 /// <date>2020-08-13</date>
-namespace BepInEx_Extensions.Tests
+namespace BepInEx.Extensions.Tests
 {
     /// <summary>
     /// A ConfigFileModel example use case and model test.

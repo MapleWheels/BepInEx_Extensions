@@ -6,7 +6,7 @@ using System.Reflection;
 
 /// <author>PerfidousLeaf | MapleWheels</author>
 /// <date>2020-08-13</date>
-namespace BepInEx_Extensions.Configuration
+namespace BepInEx.Extensions.Configuration
 {
     /// <summary>
     /// This class is designed to allow Attribute-based Configuration File definitions, similar to Entity Framework's DbContext files. WARNING: All members must be declared as Properties with "get"/"set". Fields will not be detected. Usage: Extend/Derive this class and define all of your ConfigEntry<T> variables as Properties (with get/set). Then just instantiate the class and all members will be auto-bound.
@@ -30,6 +30,19 @@ namespace BepInEx_Extensions.Configuration
                 Logger = _StaticLogger;
             else
                 Logger = logger;
+
+            if (GenericConfigFileBindMethod == null) 
+            {
+                //The generic version of ConfigFile.Bind<T>(). Only needs to be resolved once.
+                GenericConfigFileBindMethod =
+                    typeof(ConfigFile)
+                    .GetMethods().FirstOrDefault(
+                        m => m.GetParameters().Count() == 4
+                        && m.GetParameters()[0].ParameterType == typeof(string)
+                        && m.GetParameters()[1].ParameterType == typeof(string)
+                        && m.GetParameters()[3].ParameterType == typeof(ConfigDescription)
+                    );
+            }
 
             try
             {
@@ -68,17 +81,7 @@ namespace BepInEx_Extensions.Configuration
         {
             //Use Reflection to get all of the Property Members.
             PropertyInfo[] propertyInfos = GetType().GetProperties();
-
-            //The generic version of ConfigFile.Bind<T>()
-            MethodInfo genericBindMethod = 
-                typeof(ConfigFile)
-                .GetMethods().FirstOrDefault(
-                    m => m.GetParameters().Count() == 4
-                    && m.GetParameters()[0].ParameterType == typeof(string)
-                    && m.GetParameters()[1].ParameterType == typeof(string)
-                    && m.GetParameters()[3].ParameterType == typeof(ConfigDescription)
-                );
-
+            
             //The generic version of PrePropertyBind<T>()
             MethodInfo genericPreBindMethod = 
                 GetType().GetMethod(
@@ -242,5 +245,7 @@ namespace BepInEx_Extensions.Configuration
 
         protected static ManualLogSource _StaticLogger { get; private set; }
         protected ManualLogSource Logger { get; set; }
+
+        protected static MethodInfo GenericConfigFileBindMethod { get; private set; }
     } 
 }

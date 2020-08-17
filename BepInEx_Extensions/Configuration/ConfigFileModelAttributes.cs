@@ -3,7 +3,7 @@
 /// <author>PerfidousLeaf | MapleWheels</author>
 /// <date>2020-08-13</date>
 
-namespace BepInEx_Extensions.Configuration
+namespace BepInEx.Extensions.Configuration
 {
     /// <summary>
     /// Intended for use with ConfigEntry<> vars in ConfigFileModel. Used to define the in-file descriptions when binding to the config file.
