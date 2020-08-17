@@ -54,7 +54,7 @@ namespace BepInEx_Extensions.Tests
         public ConfigEntry<TestEnum> ModelValue8 { get; set; }
 
         //Constructor call, you normally leave this blank.
-        public ConfigModelTests(ConfigFile file, ManualLogSource logger, string section) : base(file, logger, section) { }
+        public ConfigModelTests(ConfigFile file, ManualLogSource logger = null, string section) : base(file, logger, section) { }
 
         //-----Virtual helper method examples-----//
 
