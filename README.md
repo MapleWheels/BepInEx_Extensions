@@ -1,10 +1,10 @@
 *Note: This README is still very much incomplete and this project is in it's alpha state, although it should be mostly bug-free on the master branch. Configuration/Tests will contains the most up-to-date examples for basic/standard usage.*
 
-This BepInEx Extension library is a collection of various helper functionalities. As of now the current ready-to-use functions it includes are:
--  **Configuration File Model**: https://github.com/MapleWheels/BepInEx_Extensions/blob/master/BepInEx_Extensions/Configuration/ConfigFileModel.cs
+This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collection of various helper functionalities. As of now the current ready-to-use functions it includes are:
+-  **[Configuration File Model](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/BepInEx_Extensions/Configuration/ConfigFileModel.cs)**: 
 	> This was developed in the spirit of *Entity Framework Core*'s Data-Model class.
 	> Includes virtual methods for easy customization of each variable in Pre and Post BepInEx.Configuration.ConfigFile.Bind() and for common ConfigFile events.
-	> Allows you to develop an attribute-style configuration file model. See ConfigModelTests.cs for an example: https://github.com/MapleWheels/BepInEx_Extensions/blob/master/BepInEx_Extensions/Tests/ConfigModelTests.cs
+	> Allows you to develop an attribute-style configuration file model. **See [ConfigModelTests.cs](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/BepInEx_Extensions/Tests/ConfigModelTests.cs)** for an example.
 	
 
 Coming Soon:
