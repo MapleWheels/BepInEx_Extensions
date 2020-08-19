@@ -105,6 +105,30 @@ namespace BepInEx.Extensions.Tests
         {
             //base.OnSettingsChanged(sender, args); //This does nothing and can be ommitted.
         }
+
+        /// <summary>
+        /// This is called whenever the active ConfigFile is changed by calling ChangeConfigFile(). This is called AFTER the change has been completed.
+        /// </summary>
+        /// <param name="oldFile">The old ConfigFile.</param>
+        /// <param name="newFile">The current/new ConfigFile.</param>
+        protected override void OnConfigFileMigration(ConfigFile oldFile, ConfigFile newFile)
+        {
+            //base.OnConfigFileMigration(oldFile, newFile); //This does nothing and can be ommitted.
+        }
+
+        /// <summary>
+        /// This is called after a ConfigFile.ConfigReloaded event has been triggered. It will be called once for EACH model property that has been orphaned (their values couldn't not be read from the config file). You can use this to deal with ConfigEntries that may have bad values set to them.
+        /// </summary>
+        /// <typeparam name="T">The inner type of the ConfigEntry<> </typeparam>
+        /// <param name="orphanedEntry">The orphaned ConfigEntry.</param>
+        /// <param name="sectionName">The section name this ConfigEntry is under. Is equal to Model.SectionName.</param>
+        /// <param name="oprhanDictConfigDef">The raw ConfigDefinition value from ConfigFile.OrphanedEntries.</param>
+        /// <param name="orphanDictStringValue">The raw string value from ConfigFile.OrphanedEntries.</param>
+        /// <param name="file">The current ConfigFile.</param>
+        public override void OrphanedPropertyPostConfigReload<T>(ConfigEntry<T> orphanedEntry, string sectionName, ConfigDefinition oprhanDictConfigDef, string orphanDictStringValue, ConfigFile file)
+        {
+            //base.OrphanedPropertyPostConfigReload(orphanedEntry, sectionName, oprhanDictConfigDef, orphanDictStringValue, file); //This does nothing and can be ommitted.
+        }
     }
 
     public enum TestEnum

@@ -336,7 +336,7 @@ namespace BepInEx.Extensions.Configuration
         protected static ManualLogSource _StaticLogger { get; private set; }
         protected ManualLogSource Logger { get; set; }
 
-        private string SectionName { get; set; }
+        protected string SectionName { get; private set; }
         private ConfigFile CurrentFile { get; set; }
         private static MethodInfo CFM_GenericConfigFileBindMethod { get; }
 
