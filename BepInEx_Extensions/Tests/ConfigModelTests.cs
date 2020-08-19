@@ -59,7 +59,7 @@ namespace BepInEx.Extensions.Tests
         public ConfigEntry<TestEnum> ModelValue8 { get; set; }
 
         //Constructor call, you normally leave this empty.
-        public ConfigModelTests(ConfigFile file, ManualLogSource logger = null, string section = null) : base(file, logger, section) { }
+        public ConfigModelTests(ConfigFile file, string section = null, ManualLogSource logger = null) : base(file, section, logger) { }
 
         //-----Virtual helper method examples-----//
 
@@ -125,7 +125,7 @@ namespace BepInEx.Extensions.Tests
         {
             try
             {
-                ConfigModelTests cmt = new ConfigModelTests(file, logger, "TestSection");
+                ConfigModelTests cmt = new ConfigModelTests(file, "TestSection", logger);
                 logger.LogInfo($"ModelTesterPlugin::Awake() | TypeOf({nameof(cmt)})={cmt.GetType()}");
                 logger.LogInfo($"ConfigModelTest: ModelName = {cmt.ModelName.Value}");
                 logger.LogInfo($"ConfigModelTest: ModelValue1 = {cmt.ModelValue1.Value}");

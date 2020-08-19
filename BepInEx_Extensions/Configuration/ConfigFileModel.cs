@@ -1,6 +1,8 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Logging;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -26,6 +28,9 @@ namespace BepInEx.Extensions.Configuration
                     && m.GetParameters()[1].ParameterType == typeof(string)
                     && m.GetParameters()[3].ParameterType == typeof(ConfigDescription)
                 );
+
+            //The generic version of ConfigFile.OrphanedEntries, used for ConfigReloaded events.
+            ConfigFile_OrphanedEntries = typeof(ConfigFile).GetProperty("OrphanedEntries", BindingFlags.Instance | BindingFlags.NonPublic);
         }
 
         /// <summary>
@@ -34,8 +39,20 @@ namespace BepInEx.Extensions.Configuration
         /// <param name="file">The configuration file to bind to.</param>
         /// <param name="logger">The BepInEx Logger to be used. If ommitted, a default instance of the logger will be used that is shared by all ConfigFileModel instances.</param>
         /// <param name="sectionName">The section name that this model will appear under in the ConfigFile. The ConfigModelSectionName attribute will be used if this is set to null/ommitted.</param>
-        public ConfigFileModel(ConfigFile file, ManualLogSource logger = null, string sectionName = null)
+        public ConfigFileModel(ConfigFile file, string sectionName = null, ManualLogSource logger = null)
         {
+            //--Generics definitions--//
+            //The generic version of OperphanedPropertyPostConfigReloaded<T>()
+            CFM_GenericOrphanedPropertyPostConfigReloadMethod = GetType().GetMethod(nameof(OrphanedPropertyPostConfigReload), BindingFlags.Instance);
+            //The generic version of PrePropertyBind<T>()
+            CFM_GenericPreBindMethod = GetType().GetMethod(nameof(PrePropertyBind), BindingFlags.Instance);
+            //The generic version of PostPropertyBind<T>()
+            CFM_GenericPostBindMethod = GetType().GetMethod(nameof(PostPropertyBind), BindingFlags.Instance);
+            //The model's ConfigEntry<> properties. Use Reflection to get all of the Property Members.
+            CFM_ConfigFileEntryProperties = GetType().GetProperties().Where(
+                prop => prop.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>)
+                ).ToArray();
+
             if (_StaticLogger == null)
                 _StaticLogger = BepInEx.Logging.Logger.CreateLogSource("ConfigFileModel_DefaultLogger");
 
@@ -44,33 +61,9 @@ namespace BepInEx.Extensions.Configuration
             else
                 Logger = logger;
 
-            try
-            {
-                if (sectionName==null)
-                {
-                    sectionName = ((ConfigModelSectionName)this.GetType().GetCustomAttributes(typeof(ConfigModelSectionName), true)[0])?.Value;
-
-                    if (sectionName == null || sectionName == "")
-                    {
-                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string?");
-                    }
-                    else
-                    {
-                        OnModelCreate(file, ref sectionName);   //Pre-Init properties
-                        InitAndBindConfigs(file, sectionName);  //Init properties
-                        //Post Init: register Event Handlers.
-                        file.ConfigReloaded += OnConfigReloaded;
-                        file.SettingChanged += OnSettingsChanged;
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.LogError($"{GetType().Name} | Constructor Error: ");
-                Logger.LogError(e.Message);
-            }
-
+            SetCurrentConfigFile(file, sectionName);
         }
+
 
         /// <summary>
         /// Internal use only! Uses reflection to parse through all ConfigEntry<> vars in inheriting data model classes and bind them to their associated configuration entries in the BepInEx ConfigFile. Intended to allow Attribute-Based config file design similar to Entity Framework's DbContext.
@@ -78,25 +71,8 @@ namespace BepInEx.Extensions.Configuration
         /// <param name="file">The target config file to bind to.</param>
         /// <param name="sectionName">The section name in the config file this Data model will be placed under.</param>
         private void InitAndBindConfigs(ConfigFile file, string sectionName)
-        {
-            //Use Reflection to get all of the Property Members.
-            PropertyInfo[] propertyInfos = GetType().GetProperties();
-            
-            //The generic version of PrePropertyBind<T>()
-            MethodInfo genericPreBindMethod = 
-                GetType().GetMethod(
-                    nameof(PrePropertyBind),
-                    BindingFlags.Instance
-                );
-
-            //The generic version of PostPropertyBind<T>()
-            MethodInfo genericPostBindMethod =
-                GetType().GetMethod(
-                    nameof(PostPropertyBind),
-                    BindingFlags.Instance
-                );
-
-            foreach (PropertyInfo property in propertyInfos)
+        {            
+            foreach (PropertyInfo property in CFM_ConfigFileEntryProperties)
             {
                 if (property.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>))
                 {
@@ -138,7 +114,7 @@ namespace BepInEx.Extensions.Configuration
                         bool useStandardPropertyBinding = true;
 
                         //Make generic for Pre and Post Property binding methods
-                        MethodInfo instancedGenericPrePropertyBind = genericPreBindMethod.MakeGenericMethod(configEntryInstanceType);
+                        MethodInfo instancedGenericPrePropertyBind = CFM_GenericPreBindMethod.MakeGenericMethod(configEntryInstanceType);
 
                         object[] modParams = new object[]
                         {
@@ -168,7 +144,7 @@ namespace BepInEx.Extensions.Configuration
                             MethodInfo instancedGenericConfigBind = GenericConfigFileBindMethod.MakeGenericMethod(configEntryInstanceType);
 
                             //Get generic for PostBindingCalls
-                            MethodInfo instancedGenericPostPropertyBind = genericPostBindMethod.MakeGenericMethod(configEntryInstanceType);
+                            MethodInfo instancedGenericPostPropertyBind = CFM_GenericPostBindMethod.MakeGenericMethod(configEntryInstanceType);
 
                             // Bind the property.
                             var configBind = instancedGenericConfigBind.Invoke(this, new object[] { 
@@ -200,14 +176,76 @@ namespace BepInEx.Extensions.Configuration
         }
 
         /// <summary>
-        /// Called during the Constructor sequence. This function is called before any of the Model-Class properties are processed and bound.
+        /// Called when the active ConfigFile has been changed by ChangeConfigFile(). Called after migration is completed.
+        /// </summary>
+        /// <param name="oldFile">The old ConfigFile.</param>
+        /// <param name="newFile">The new ConfigFile.</param>
+        protected virtual void OnConfigFileMigration(ConfigFile oldFile, ConfigFile newFile) { }
+
+        /// <summary>
+        /// Changes the active ConfigFile used by the model. Calls OnConfigFileMigration and forces a re-initialization of the model.
+        /// </summary>
+        /// <param name="newFile"></param>
+        public void ChangeConfigFile(ConfigFile newFile, string sectionName = null)
+        {
+            if (currentFile == newFile)
+            {
+                Logger.LogError($"{this.GetType()}::ChangeConfigFile() | The current/old and target/new ConfigFiles are the same. Skipping!");
+                return;
+            }
+
+            ConfigFile oldFile = currentFile;
+            SetCurrentConfigFile(newFile, sectionName);
+            OnConfigFileMigration(oldFile, newFile);
+        }
+
+        /// <summary>
+        /// Internal use only! Sets the currently active config file and runs model initialization.
+        /// </summary>
+        /// <param name="file">The new config file to set.</param>
+        private void SetCurrentConfigFile(ConfigFile file, string sectionName = null)
+        {
+            try
+            {
+                currentFile = file;
+
+                if (sectionName == null)
+                {
+                    sectionName = ((ConfigModelSectionName)this.GetType().GetCustomAttributes(typeof(ConfigModelSectionName), true)[0])?.Value;
+
+                    if (sectionName == null || sectionName == "")
+                    {
+                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string?");
+                    }
+                    else
+                    {
+                        OnModelCreate(file, ref sectionName);   //Pre-Init properties
+                        InitAndBindConfigs(file, sectionName);  //Init properties
+                        //Post Init: (Re)register Event Handlers.
+                        file.ConfigReloaded -= OnConfigReloaded;
+                        file.ConfigReloaded += OnConfigReloaded;
+
+                        file.SettingChanged -= OnSettingsChanged;
+                        file.SettingChanged += OnSettingsChanged;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logger.LogError($"{GetType().Name} | Constructor Error: ");
+                Logger.LogError(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Called during the model's initialization sequence. This function is called BEFORE any of the Model-Class properties are processed and bound.
         /// </summary>
         /// <param name="file">The configuration file</param>
         /// <param name="sectionName">The section name string to be used in the config file.</param>
         protected virtual void OnModelCreate(ConfigFile file, ref string sectionName) { }
 
         /// <summary>
-        /// This method is called on every ConfigEntry<> Property Member in the Model-Class before Bind() call is made. You can make changes here to customize anything that you wish before it is bound to the config file. You can even choose to override/skip the binding process altogether. Note: that you must perform the binding yourself in this scenario.
+        /// This method is called on every ConfigEntry<> Property Member in the Model-Class before the ConfigFile.Bind() call is made. You can make changes here to customize anything that you wish before it is bound to the config file. You can even choose to override/skip the binding process altogether. Note: that you must perform the binding yourself in this scenario.
         /// </summary>
         /// <typeparam name="T">The Type of the default value. Same as the [T] in ConfigEntry<T>.</typeparam>
         /// <param name="property">The PropertyInfo of the ConfigEntry<> variable to be bound.</param>
@@ -238,6 +276,33 @@ namespace BepInEx.Extensions.Configuration
         public virtual void OnConfigReloaded(object sender, EventArgs e) { }
 
         /// <summary>
+        /// Called upon the configuration being reloaded. Is called once for each ConfigEntry<> that has been orphaned (unbound/unable to be read from the config file). Allows custom handling of orphaned entries' values. 
+        /// </summary>
+        /// <typeparam name="T">The entry underlying type T.</typeparam>
+        /// <param name="orphanedEntry">The orphaned ConfigEntry<> </param>
+        /// <param name="sectionName">The section name used by the orphaned entry.</param>
+        public virtual void OrphanedPropertyPostConfigReload<T>(ConfigEntry<T> orphanedEntry, string sectionName) { }
+        
+        /// <summary>
+        /// Used to process Config Reloaded events.
+        /// </summary>
+        private void InternalOnConfigReloaded()
+        {
+            Dictionary<ConfigDefinition, string> OrphanedEntriesProperty = (Dictionary<ConfigDefinition, string>)ConfigFile_OrphanedEntries.GetValue(currentFile, null);
+
+            foreach (PropertyInfo property in CFM_ConfigFileEntryProperties)
+            {
+                foreach(KeyValuePair<ConfigDefinition, string> orphanEntry in OrphanedEntriesProperty)
+                {
+                    if (orphanEntry.Key.Key == property.Name)
+                    {
+
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Called upon the BepInEx settings being changed.Triggered by the ConfigFile.SettingChanged Event.
         /// <param name="sender"></param>
         /// <param name="args">SettingsChanged data passed from the BepInEx event. For more info, see: [BepInEx.Configuration.SettingChangedEventArgs].</param>
@@ -246,6 +311,14 @@ namespace BepInEx.Extensions.Configuration
         protected static ManualLogSource _StaticLogger { get; private set; }
         protected ManualLogSource Logger { get; set; }
 
+        private ConfigFile currentFile { get; set; }
         private static MethodInfo GenericConfigFileBindMethod { get; set; }
+
+        private MethodInfo CFM_GenericOrphanedPropertyPostConfigReloadMethod { get; }
+        private MethodInfo CFM_GenericPreBindMethod { get; }
+        private MethodInfo CFM_GenericPostBindMethod { get; }
+
+        private PropertyInfo[] CFM_ConfigFileEntryProperties { get; }
+        private static PropertyInfo ConfigFile_OrphanedEntries { get; }
     } 
 }
