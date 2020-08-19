@@ -20,7 +20,7 @@ namespace BepInEx.Extensions.Configuration
         static ConfigFileModel()
         {
             //The generic version of ConfigFile.Bind<T>(). Only needs to be resolved once.
-            GenericConfigFileBindMethod =
+            CFM_GenericConfigFileBindMethod =
                 typeof(ConfigFile)
                 .GetMethods().FirstOrDefault(
                     m => m.GetParameters().Count() == 4
@@ -30,7 +30,7 @@ namespace BepInEx.Extensions.Configuration
                 );
 
             //The generic version of ConfigFile.OrphanedEntries, used for ConfigReloaded events.
-            ConfigFile_OrphanedEntries = typeof(ConfigFile).GetProperty("OrphanedEntries", BindingFlags.Instance | BindingFlags.NonPublic);
+            ConfigFile_OrphanedEntriesDefinition = typeof(ConfigFile).GetProperty("OrphanedEntries", BindingFlags.Instance | BindingFlags.NonPublic);
         }
 
         /// <summary>
@@ -141,7 +141,7 @@ namespace BepInEx.Extensions.Configuration
                         if (useStandardPropertyBinding)
                         {
                             //Get generic for ConfigFile.Bind<T>()
-                            MethodInfo instancedGenericConfigBind = GenericConfigFileBindMethod.MakeGenericMethod(configEntryInstanceType);
+                            MethodInfo instancedGenericConfigBind = CFM_GenericConfigFileBindMethod.MakeGenericMethod(configEntryInstanceType);
 
                             //Get generic for PostBindingCalls
                             MethodInfo instancedGenericPostPropertyBind = CFM_GenericPostBindMethod.MakeGenericMethod(configEntryInstanceType);
@@ -188,13 +188,13 @@ namespace BepInEx.Extensions.Configuration
         /// <param name="newFile"></param>
         public void ChangeConfigFile(ConfigFile newFile, string sectionName = null)
         {
-            if (currentFile == newFile)
+            if (CurrentFile == newFile)
             {
                 Logger.LogError($"{this.GetType()}::ChangeConfigFile() | The current/old and target/new ConfigFiles are the same. Skipping!");
                 return;
             }
 
-            ConfigFile oldFile = currentFile;
+            ConfigFile oldFile = CurrentFile;
             SetCurrentConfigFile(newFile, sectionName);
             OnConfigFileMigration(oldFile, newFile);
         }
@@ -207,7 +207,13 @@ namespace BepInEx.Extensions.Configuration
         {
             try
             {
-                currentFile = file;
+                if (file == null)
+                {
+                    Logger.LogError($"{GetType().Name} | The ConfigFile argument is null! Model initialization aborted!!");
+                    return;
+                }
+
+                CurrentFile = file;
 
                 if (sectionName == null)
                 {
@@ -215,24 +221,24 @@ namespace BepInEx.Extensions.Configuration
 
                     if (sectionName == null || sectionName == "")
                     {
-                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string?");
-                    }
-                    else
-                    {
-                        OnModelCreate(file, ref sectionName);   //Pre-Init properties
-                        InitAndBindConfigs(file, sectionName);  //Init properties
-                        //Post Init: (Re)register Event Handlers.
-                        file.ConfigReloaded -= OnConfigReloaded;
-                        file.ConfigReloaded += OnConfigReloaded;
-
-                        file.SettingChanged -= OnSettingsChanged;
-                        file.SettingChanged += OnSettingsChanged;
+                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string? Model initialization aborted!!");
+                        return;
                     }
                 }
+
+                OnModelCreate(file, ref sectionName);   //Pre-Init properties
+                InitAndBindConfigs(file, sectionName);  //Init properties
+                SectionName = sectionName;          //For use with external events
+                                                    //Post Init: (Re)register Event Handlers.
+                file.ConfigReloaded -= OnConfigReloaded;
+                file.ConfigReloaded += OnConfigReloaded;
+
+                file.SettingChanged -= OnSettingsChanged;
+                file.SettingChanged += OnSettingsChanged;
             }
             catch (Exception e)
             {
-                Logger.LogError($"{GetType().Name} | Constructor Error: ");
+                Logger.LogError($"{GetType().Name}::{nameof(SetCurrentConfigFile)}() | Error: ");
                 Logger.LogError(e.Message);
             }
         }
@@ -281,23 +287,41 @@ namespace BepInEx.Extensions.Configuration
         /// <typeparam name="T">The entry underlying type T.</typeparam>
         /// <param name="orphanedEntry">The orphaned ConfigEntry<> </param>
         /// <param name="sectionName">The section name used by the orphaned entry.</param>
-        public virtual void OrphanedPropertyPostConfigReload<T>(ConfigEntry<T> orphanedEntry, string sectionName) { }
+        public virtual void OrphanedPropertyPostConfigReload<T>(ConfigEntry<T> orphanedEntry, string sectionName, ConfigDefinition oprhanDictConfigDef, string orphanDictStringValue, ConfigFile file) { }
         
         /// <summary>
         /// Used to process Config Reloaded events.
         /// </summary>
         private void InternalOnConfigReloaded()
         {
-            Dictionary<ConfigDefinition, string> OrphanedEntriesProperty = (Dictionary<ConfigDefinition, string>)ConfigFile_OrphanedEntries.GetValue(currentFile, null);
+            Dictionary<ConfigDefinition, string> OrphanedEntriesProperty = (Dictionary<ConfigDefinition, string>)ConfigFile_OrphanedEntriesDefinition.GetValue(CurrentFile, null);
 
             foreach (PropertyInfo property in CFM_ConfigFileEntryProperties)
             {
-                foreach(KeyValuePair<ConfigDefinition, string> orphanEntry in OrphanedEntriesProperty)
+                //Search for a matching key/section and call OrphanedPropertyPostConfigReload<T>() for the property.
+                foreach (KeyValuePair<ConfigDefinition, string> orphanEntry in OrphanedEntriesProperty)
                 {
-                    if (orphanEntry.Key.Key == property.Name)
+                    if (orphanEntry.Key.Key == property.Name && orphanEntry.Key.Section == SectionName)
                     {
+                        MethodInfo instancedGenericOrphanedPropCfgReload = CFM_GenericOrphanedPropertyPostConfigReloadMethod.MakeGenericMethod(property.PropertyType.GetGenericArguments()[0]);
 
+                        var cfgEntry = Convert.ChangeType(property.GetValue(this, null), property.PropertyType);
+
+                        object[] param = new object[] 
+                        { 
+                            cfgEntry,
+                            SectionName,
+                            orphanEntry.Key,
+                            orphanEntry.Value,
+                            CurrentFile
+                        };
+
+                        //Calling OrphanedPropertyPostConfigReload<T>()
+                        instancedGenericOrphanedPropCfgReload.Invoke(this, param);
+
+                        property.SetValue(this, param[0], null);
                     }
+                    break;  //No need to search the rest of the orphans for this same property.
                 }
             }
         }
@@ -308,17 +332,19 @@ namespace BepInEx.Extensions.Configuration
         /// <param name="args">SettingsChanged data passed from the BepInEx event. For more info, see: [BepInEx.Configuration.SettingChangedEventArgs].</param>
         public virtual void OnSettingsChanged(object sender, BepInEx.Configuration.SettingChangedEventArgs args) { }
 
+        //---Var Defs---//
         protected static ManualLogSource _StaticLogger { get; private set; }
         protected ManualLogSource Logger { get; set; }
 
-        private ConfigFile currentFile { get; set; }
-        private static MethodInfo GenericConfigFileBindMethod { get; set; }
+        private string SectionName { get; set; }
+        private ConfigFile CurrentFile { get; set; }
+        private static MethodInfo CFM_GenericConfigFileBindMethod { get; }
 
         private MethodInfo CFM_GenericOrphanedPropertyPostConfigReloadMethod { get; }
         private MethodInfo CFM_GenericPreBindMethod { get; }
         private MethodInfo CFM_GenericPostBindMethod { get; }
 
         private PropertyInfo[] CFM_ConfigFileEntryProperties { get; }
-        private static PropertyInfo ConfigFile_OrphanedEntries { get; }
+        private static PropertyInfo ConfigFile_OrphanedEntriesDefinition { get; }
     } 
 }
