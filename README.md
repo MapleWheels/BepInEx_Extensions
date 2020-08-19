@@ -5,8 +5,9 @@ This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collec
 	> This was developed in the spirit of *Entity Framework Core*'s Data-Model class.
 	> Includes virtual methods for easy customization of each variable in Pre and Post BepInEx.Configuration.ConfigFile.Bind() and for common ConfigFile events.
 	> Allows you to develop an attribute-style configuration file model. **See [ConfigModelTests.cs](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/BepInEx_Extensions/Tests/ConfigModelTests.cs)** for an example.
+	> **New**: Configuration Reload Event virtual method for handling ConfigEntry<> property members that have failed to be bound to their configuration file entry.
+	> **New**: Migration: You can now change which ConfigFile a model is using live, including Migration hooks.
 	
 
 Coming Soon:
-- Configuration Reload Event virtual method for handling ConfigEntry<> property members that have failed to be bound to their configuration file entry.
 - Entity Framework's DbContext-style model for wrapping all model's based on their alloted ConfigFile.
