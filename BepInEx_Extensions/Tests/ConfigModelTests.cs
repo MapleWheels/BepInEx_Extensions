@@ -107,7 +107,7 @@ namespace BepInEx.Extensions.Tests
         }
 
         /// <summary>
-        /// This is called whenever the active ConfigFile is changed by calling ChangeConfigFile(). This is called AFTER the change has been completed.
+        /// This is called whenever the active ConfigFile is changed by calling ChangeConfigFile(). This is called AFTER the change has been completed. you can use this to handle any clean up or other data you would like to move to/from the different config files.
         /// </summary>
         /// <param name="oldFile">The old ConfigFile.</param>
         /// <param name="newFile">The current/new ConfigFile.</param>
