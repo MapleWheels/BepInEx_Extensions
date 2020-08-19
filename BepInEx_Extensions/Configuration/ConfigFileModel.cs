@@ -15,7 +15,6 @@ namespace BepInEx.Extensions.Configuration
     /// </summary>
     public class ConfigFileModel
     {
-
         static ConfigFileModel()
         {
             //The generic version of ConfigFile.Bind<T>(). Only needs to be resolved once.

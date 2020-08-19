@@ -7,8 +7,8 @@
     <ProjectGuid>{AB385F7E-40BE-445F-81EC-945E72AC038E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BepInEx_Extensions</RootNamespace>
-    <AssemblyName>BepInEx_Extensions</AssemblyName>
+    <RootNamespace>BepInEx.Extensions</RootNamespace>
+    <AssemblyName>BepInEx.Extensions</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
