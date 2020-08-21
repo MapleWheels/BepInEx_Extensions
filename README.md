@@ -7,7 +7,7 @@ This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collec
 	
 	> Includes virtual methods for easy customization of each variable in Pre and Post BepInEx.Configuration.ConfigFile.Bind() and for common ConfigFile events.
 	
-	> Allows you to develop an attribute-style configuration file model. **See [ConfigModelTests.cs](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/BepInEx_Extensions/Tests/ConfigModelTests.cs)** for an example.
+	> Allows you to develop an attribute-style configuration file model. **See [ConfigModelTests.cs](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/ConfigModelTests/Tests/ConfigModelTestModel.cs)** for an example.
 	
 	> **New**: Configuration Reload Event virtual method for handling ConfigEntry<> property members that have failed to be bound to their configuration file entry.
 	
