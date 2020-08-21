@@ -2,7 +2,6 @@
 using BepInEx.Logging;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 
@@ -43,11 +42,11 @@ namespace BepInEx.Extensions.Configuration
         {
             //--Generics definitions--//
             //The generic version of OperphanedPropertyPostConfigReloaded<T>()
-            CFM_GenericOrphanedPropertyPostConfigReloadMethod = GetType().GetMethod(nameof(OrphanedPropertyPostConfigReload), BindingFlags.Instance);
+            CFM_GenericOrphanedPropertyPostConfigReloadMethod = GetType().GetMethod(nameof(OrphanedPropertyPostConfigReload), BindingFlags.Instance );
             //The generic version of PrePropertyBind<T>()
-            CFM_GenericPreBindMethod = GetType().GetMethod(nameof(PrePropertyBind), BindingFlags.Instance);
+            CFM_GenericPreBindMethod = GetType().GetMethod(nameof(PrePropertyBind), BindingFlags.Instance | BindingFlags.NonPublic);
             //The generic version of PostPropertyBind<T>()
-            CFM_GenericPostBindMethod = GetType().GetMethod(nameof(PostPropertyBind), BindingFlags.Instance);
+            CFM_GenericPostBindMethod = GetType().GetMethod(nameof(PostPropertyBind), BindingFlags.Instance | BindingFlags.NonPublic);
             //The model's ConfigEntry<> properties. Use Reflection to get all of the Property Members.
             CFM_ConfigFileEntryProperties = GetType().GetProperties().Where(
                 prop => prop.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>)
@@ -80,9 +79,21 @@ namespace BepInEx.Extensions.Configuration
                     {
                         //Get T value from property
                         Type configEntryInstanceType = property.PropertyType.GetGenericArguments()[0];
-
+                        Logger.LogInfo($"{property.Name}: GenericType Args= {configEntryInstanceType.Name}");
                         //Get the default description and warn/log and set defaults on failure. 
-                        string descriptionString = ((ConfigEntryDescription)property.GetCustomAttributes(typeof(ConfigEntryDescription), false)[0])?.Value;
+                        string descriptionString = null;
+                        object defaultValueRaw = null;
+                        object defaultValue = null;
+                        string key = null;
+
+                        object[] rawAttributeBuffer = null;
+
+                        //Get config entry's attributes
+                        //Get the default description string and warn/log and set defaults on failure. 
+                        rawAttributeBuffer = property.GetCustomAttributes(typeof(ConfigEntryDescription), false);
+
+                        if (rawAttributeBuffer != null && rawAttributeBuffer.Length > 0)
+                            descriptionString = ((ConfigEntryDescription)rawAttributeBuffer[0]).Value;
 
                         if (descriptionString == null)
                         {
@@ -93,28 +104,44 @@ namespace BepInEx.Extensions.Configuration
                         ConfigDescription cfgDescription = new ConfigDescription(descriptionString);
 
                         //Get the default value and warn/log and set defaults on failure. 
-                        var defaultValueRaw = ((ConfigEntryDefaultValue)property.GetCustomAttributes(typeof(ConfigEntryDefaultValue), false)[0])?.Value;
+                        rawAttributeBuffer = property.GetCustomAttributes(typeof(ConfigEntryDefaultValue), false);
+                        
+                        if (rawAttributeBuffer != null && rawAttributeBuffer.Length > 0)
+                            defaultValueRaw = ((ConfigEntryDefaultValue)rawAttributeBuffer[0]).Value;  //Value can be null
 
-                        object defaultValue;
+                        Logger.LogInfo($"{property.Name}: DefaultValRaw= {defaultValueRaw}");
+
                         if(defaultValueRaw == null)
                         {
-                            defaultValue = Activator.CreateInstance(configEntryInstanceType);
+                            defaultValueRaw = Activator.CreateInstance(configEntryInstanceType);
                             Logger.LogWarning($"{GetType().Name}.{property.Name}: Could not get default value from attribute. Using default.");
                         }
 
                         defaultValue = Convert.ChangeType(defaultValueRaw, configEntryInstanceType); //Needs to be converted regardless of Activator. Otherwise MakeGenericMethod does not resolve T properly for some reason.
 
-                        //Key value
-                        string key = ((ConfigEntryKey)property.GetCustomAttributes(typeof(ConfigEntryKey), false)[0])?.Value;
+                        //Key value if set
+                        rawAttributeBuffer = property.GetCustomAttributes(typeof(ConfigEntryKey), false);
 
-                        if (key == null || key  == "")
+                        if (rawAttributeBuffer != null && rawAttributeBuffer.Length > 0)
+                            key = ((ConfigEntryKey)rawAttributeBuffer[0]).Value;
+
+                        Logger.LogInfo($"{property.Name}: KeyAttrib= {key}");
+
+                        if (key == null)
                             key = property.Name;
+
+                        Logger.LogInfo($"{property.Name}: Post-Process KeyAttrib= {key}");
 
                         //should we call ConfigFile.Bind()?
                         bool useStandardPropertyBinding = true;
 
+                        Logger.LogInfo($"{property.Name}: CFM_GenericPreBind= {CFM_GenericPreBindMethod.Name}");
+
                         //Make generic for Pre and Post Property binding methods
                         MethodInfo instancedGenericPrePropertyBind = CFM_GenericPreBindMethod.MakeGenericMethod(configEntryInstanceType);
+
+                        Logger.LogInfo($"{property.Name}: instancedGenericPrePropertyBind= {instancedGenericPrePropertyBind.Name}");
+
 
                         object[] modParams = new object[]
                         {
@@ -127,14 +154,22 @@ namespace BepInEx.Extensions.Configuration
                             useStandardPropertyBinding
                         };
 
+                        Logger.LogInfo($"{property.Name}: modParams= {modParams}");
+
                         instancedGenericPrePropertyBind.Invoke(this, modParams);
 
                         //Reassignment
+                        Logger.LogInfo($"{property.Name}: modParams[1]= {modParams[1]}");
                         sectionName = (string)modParams[1];
+                        Logger.LogInfo($"{property.Name}: modParams[2]= {modParams[2]}");
                         key = (string)modParams[2];
+                        Logger.LogInfo($"{property.Name}: modParams[3]= {modParams[3]}");
                         defaultValue = modParams[3];
+                        Logger.LogInfo($"{property.Name}: modParams[4]= {modParams[4]}");
                         cfgDescription = (ConfigDescription)modParams[4];
+                        Logger.LogInfo($"{property.Name}: modParams[5]= {modParams[5]}");
                         file = (ConfigFile)modParams[5];
+                        Logger.LogInfo($"{property.Name}: modParams[6]= {modParams[6]}");
                         useStandardPropertyBinding = (bool)modParams[6];
 
                         //Standard binding will be used?
@@ -147,7 +182,7 @@ namespace BepInEx.Extensions.Configuration
                             MethodInfo instancedGenericPostPropertyBind = CFM_GenericPostBindMethod.MakeGenericMethod(configEntryInstanceType);
 
                             // Bind the property.
-                            var configBind = instancedGenericConfigBind.Invoke(this, new object[] { 
+                            var configBind = instancedGenericConfigBind.Invoke(file, new object[] { 
                                 sectionName,
                                 key,
                                 defaultValue,
@@ -170,6 +205,9 @@ namespace BepInEx.Extensions.Configuration
                     {
                         Logger.LogError($"{this.GetType().Name} | Initialization error for: {property.Name}");
                         Logger.LogError(e.Message);
+                        Logger.LogError(e.StackTrace);
+                        Logger.LogError(e.InnerException);
+                        Logger.LogError(e.InnerException?.Message);
                     }
                 }
             }
@@ -267,12 +305,12 @@ namespace BepInEx.Extensions.Configuration
         /// Called for each Model-Class property member after ConfigFile.Bind() has been called. Please note that [PrePropertyBind()] can stop this method from being run.
         /// </summary>
         /// <typeparam name="T">The Type of the Property Member</typeparam>
-        /// <param name="value">It's current value.</param>
+        /// <param name="value">The post-bound ConfigEntry property.</param>
         /// <param name="sectionName">The assigned section name using in binding.</param>
         /// <param name="key">The current key used in the config file.</param>
         /// <param name="description">The current description used in the config file.</param>
         /// <param name="file">The ConfigFile used by the Property Member.</param>
-        protected virtual void PostPropertyBind<T>(T value, string sectionName, string key, ConfigFile file) { }
+        protected virtual void PostPropertyBind<T>(ConfigEntry<T> value, string sectionName, string key, ConfigFile file) { }
 
         /// <summary>
         /// Called upon the configuration being reloaded. Triggered by the ConfigFile.ConfigReloaded Event.

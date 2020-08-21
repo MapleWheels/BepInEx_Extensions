@@ -6,13 +6,13 @@ using BepInEx.Logging;
 
 /// <author> PerfidiousLeaf </author>
 /// <date>2020-08-13</date>
-namespace BepInEx.Extensions.Tests
+namespace ConfigModelTests.Tests
 {
     /// <summary>
     /// A ConfigFileModel example use case and model test.
     /// </summary>
     [ConfigModelSectionName(Value = "This_Is_An_Example_Test_Section")] //This gets changed in OnModelCreate()
-    public class ConfigModelTests : ConfigFileModel
+    public class ConfigModelTestModel : ConfigFileModel
     {
 
         [ConfigEntryDescription(Value = "This is the model's name")]
@@ -59,7 +59,7 @@ namespace BepInEx.Extensions.Tests
         public ConfigEntry<TestEnum> ModelValue8 { get; set; }
 
         //Constructor call, you normally leave this empty.
-        public ConfigModelTests(ConfigFile file, string section = null, ManualLogSource logger = null) : base(file, section, logger) { }
+        public ConfigModelTestModel(ConfigFile file, string section = null, ManualLogSource logger = null) : base(file, section, logger) { }
 
         //-----Virtual helper method examples-----//
 
@@ -85,7 +85,7 @@ namespace BepInEx.Extensions.Tests
         /// <summary>
         /// This is called on each ConfigEntry<> property AFTER it has been linked/bound via ConfigFile.Bind(). Note that changes made here will NOT affect the value if the ConfigEntry<> property itself. This is intended to be used for other setup purposes that rely on the property's config file value. You will need to make use of Reflection or IF statements to handle [value].
         /// </summary>
-        protected override void PostPropertyBind<T>(T value, string sectionName, string key, ConfigFile file)
+        protected override void PostPropertyBind<T>(ConfigEntry<T> value, string sectionName, string key, ConfigFile file)
         {
             //base.PostPropertyBind(value, sectionName, key, file); //This does nothing and can be ommitted.
         }
@@ -137,66 +137,5 @@ namespace BepInEx.Extensions.Tests
         IndexB = 0,
         IndexC = 1,
         IndexD = 2
-    }
-
-
-    /// <summary>
-    /// A quick test of the ConfigFileModel system. NOTE/TODO: Refactor tests to be more thoughrough. NOTE: Unit Testing package not included to reduce repository bloat. 
-    /// </summary>
-    public class ModelTesterPlugin
-    {
-        public void Test(ConfigFile file, ManualLogSource logger = null)
-        {
-            try
-            {
-                ConfigModelTests cmt = new ConfigModelTests(file, "TestSection", logger);
-                logger.LogInfo($"ModelTesterPlugin::Awake() | TypeOf({nameof(cmt)})={cmt.GetType()}");
-                logger.LogInfo($"ConfigModelTest: ModelName = {cmt.ModelName.Value}");
-                logger.LogInfo($"ConfigModelTest: ModelValue1 = {cmt.ModelValue1.Value}");
-                logger.LogInfo($"ConfigModelTest: ModelValue2 = {cmt.ModelValue2.Value}");
-                logger.LogInfo($"ConfigModelTest: ModelValue3 = {cmt.ModelValue3.Value}");
-                logger.LogInfo($"ConfigModelTest: ModelValue4 = {cmt.ModelValue4.Value}");
-                logger.LogInfo($"ConfigModelTest: ModelValue5 = {cmt.ModelValue5.Value}");
-                logger.LogInfo($"ConfigModelTest: ModelValue6 = {cmt.ModelValue6.Value}");
-                logger.LogInfo($"ConfigModelTest: ModelValue7 = {cmt.ModelValue7.Value}");
-                logger.LogInfo($"ConfigModelTest: ModelValue8 = {cmt.ModelValue8.Value}");
-            }
-            catch (TargetException te)
-            {
-                logger.LogError("ModelTesterPlugin::Test() | Initalization fail.");
-                logger.LogError(te.Source);
-                logger.LogError(te.StackTrace);
-                logger.LogError(te.Message);
-                logger.LogError("TargetException: InnerException Data.");
-                logger.LogError(te.InnerException);
-                logger.LogError(te.InnerException?.Source);
-                logger.LogError(te.InnerException?.StackTrace);
-                logger.LogError(te.InnerException?.Message);
-            }
-            catch (TypeLoadException tle)
-            {
-                logger.LogError("ModelTesterPlugin::Test()");
-                logger.LogError(tle.Source);
-                logger.LogError(tle.StackTrace);
-                logger.LogError(tle.Message);
-                logger.LogError("TypeLoadException: InnerException Data.");
-                logger.LogError(tle.InnerException);
-                logger.LogError(tle.InnerException?.Source);
-                logger.LogError(tle.InnerException?.StackTrace);
-                logger.LogError(tle.InnerException?.Message);
-            }
-            catch (Exception e)
-            {
-                logger.LogError("ModelTesterPlugin::Test() | Generic exception.");
-                logger.LogError(e.Source);
-                logger.LogError(e.StackTrace);
-                logger.LogError(e.Message);
-                logger.LogError("Exception: InnerException Data.");
-                logger.LogError(e.InnerException);
-                logger.LogError(e.InnerException?.Source);
-                logger.LogError(e.InnerException?.StackTrace);
-                logger.LogError(e.InnerException?.Message);
-            }
-        }
     }
 }
