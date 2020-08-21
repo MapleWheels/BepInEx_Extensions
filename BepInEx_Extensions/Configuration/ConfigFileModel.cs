@@ -109,8 +109,6 @@ namespace BepInEx.Extensions.Configuration
                         if (rawAttributeBuffer != null && rawAttributeBuffer.Length > 0)
                             defaultValueRaw = ((ConfigEntryDefaultValue)rawAttributeBuffer[0]).Value;  //Value can be null
 
-                        Logger.LogInfo($"{property.Name}: DefaultValRaw= {defaultValueRaw}");
-
                         if(defaultValueRaw == null)
                         {
                             defaultValueRaw = Activator.CreateInstance(configEntryInstanceType);
@@ -125,23 +123,14 @@ namespace BepInEx.Extensions.Configuration
                         if (rawAttributeBuffer != null && rawAttributeBuffer.Length > 0)
                             key = ((ConfigEntryKey)rawAttributeBuffer[0]).Value;
 
-                        Logger.LogInfo($"{property.Name}: KeyAttrib= {key}");
-
                         if (key == null)
                             key = property.Name;
-
-                        Logger.LogInfo($"{property.Name}: Post-Process KeyAttrib= {key}");
 
                         //should we call ConfigFile.Bind()?
                         bool useStandardPropertyBinding = true;
 
-                        Logger.LogInfo($"{property.Name}: CFM_GenericPreBind= {CFM_GenericPreBindMethod.Name}");
-
                         //Make generic for Pre and Post Property binding methods
                         MethodInfo instancedGenericPrePropertyBind = CFM_GenericPreBindMethod.MakeGenericMethod(configEntryInstanceType);
-
-                        Logger.LogInfo($"{property.Name}: instancedGenericPrePropertyBind= {instancedGenericPrePropertyBind.Name}");
-
 
                         object[] modParams = new object[]
                         {
@@ -154,22 +143,14 @@ namespace BepInEx.Extensions.Configuration
                             useStandardPropertyBinding
                         };
 
-                        Logger.LogInfo($"{property.Name}: modParams= {modParams}");
 
-                        instancedGenericPrePropertyBind.Invoke(this, modParams);
 
                         //Reassignment
-                        Logger.LogInfo($"{property.Name}: modParams[1]= {modParams[1]}");
                         sectionName = (string)modParams[1];
-                        Logger.LogInfo($"{property.Name}: modParams[2]= {modParams[2]}");
                         key = (string)modParams[2];
-                        Logger.LogInfo($"{property.Name}: modParams[3]= {modParams[3]}");
                         defaultValue = modParams[3];
-                        Logger.LogInfo($"{property.Name}: modParams[4]= {modParams[4]}");
                         cfgDescription = (ConfigDescription)modParams[4];
-                        Logger.LogInfo($"{property.Name}: modParams[5]= {modParams[5]}");
                         file = (ConfigFile)modParams[5];
-                        Logger.LogInfo($"{property.Name}: modParams[6]= {modParams[6]}");
                         useStandardPropertyBinding = (bool)modParams[6];
 
                         //Standard binding will be used?
@@ -206,8 +187,6 @@ namespace BepInEx.Extensions.Configuration
                         Logger.LogError($"{this.GetType().Name} | Initialization error for: {property.Name}");
                         Logger.LogError(e.Message);
                         Logger.LogError(e.StackTrace);
-                        Logger.LogError(e.InnerException);
-                        Logger.LogError(e.InnerException?.Message);
                     }
                 }
             }
