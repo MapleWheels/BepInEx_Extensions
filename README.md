@@ -1,5 +1,7 @@
 *Note: This README is still very much incomplete and this project is in it's usable alpha state, although it should be mostly bug-free on the master branch. Configuration/Tests will contains the most up-to-date examples for basic/standard usage.*
 
+**Note: This project is not officially associated with BepInEx.**
+
 This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collection of various helper functionalities. As of now the current ready-to-use functions it includes are:
 -  **[Configuration File Model](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/BepInEx_Extensions/Configuration/ConfigFileModel.cs)**: 
 
