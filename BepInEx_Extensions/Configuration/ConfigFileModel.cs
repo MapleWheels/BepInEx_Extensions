@@ -49,7 +49,8 @@ namespace BepInEx.Extensions.Configuration
             CFM_GenericPostBindMethod = GetType().GetMethod(nameof(PostPropertyBind), BindingFlags.Instance | BindingFlags.NonPublic);
             //The model's ConfigEntry<> properties. Use Reflection to get all of the Property Members.
             CFM_ConfigFileEntryProperties = GetType().GetProperties().Where(
-                prop => prop.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>)
+                prop => prop.PropertyType.IsGenericType == true &&
+                prop.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>)
                 ).ToArray();
 
             if (_StaticLogger == null)
