@@ -58,8 +58,8 @@ namespace ConfigModelTests.Tests
         [ConfigEntryDefaultValue(Value = 2000)]
         public ConfigEntry<TestEnum> ModelValue8 { get; set; }
 
-        //Constructor call, you normally leave this empty.
-        public ConfigModelTestModel(ConfigFile file, string section = null, ManualLogSource logger = null) : base(file, section, logger) { }
+        //Constructor call, you normally leave this empty. Optiona, you can use Bind<T> instead to pass the information.
+        public ConfigModelTestModel(ConfigFile file = null, string section = null, ManualLogSource logger = null) : base(file, section, logger) { }
 
         //-----Virtual helper method examples-----//
 
