@@ -33,12 +33,12 @@ namespace BepInEx.Extensions.Configuration
         }
 
         /// <summary>
-        /// Create and bind the Config Data Model to the supplied ConfigFile. Binding is automatic and immediate on instantiation.
+        /// Create and bind the Config Data Model to the supplied ConfigFile. To bind the model, call Bind() after initialization.
         /// </summary>
         /// <param name="file">The configuration file to bind to.</param>
         /// <param name="logger">The BepInEx Logger to be used. If ommitted, a default instance of the logger will be used that is shared by all ConfigFileModel instances.</param>
         /// <param name="sectionName">The section name that this model will appear under in the ConfigFile. The ConfigModelSectionName attribute will be used if this is set to null/ommitted.</param>
-        public ConfigFileModel(ConfigFile file, string sectionName = null, ManualLogSource logger = null)
+        public ConfigFileModel(ConfigFile file = null, string sectionName = null, ManualLogSource logger = null)
         {
             //--Generics definitions--//
             //The generic version of OperphanedPropertyPostConfigReloaded<T>()
@@ -55,12 +55,14 @@ namespace BepInEx.Extensions.Configuration
             if (_StaticLogger == null)
                 _StaticLogger = BepInEx.Logging.Logger.CreateLogSource("ConfigFileModel_DefaultLogger");
 
-            if (logger == null)
-                Logger = _StaticLogger;
-            else
+            if (logger != null)
                 Logger = logger;
 
-            SetCurrentConfigFile(file, sectionName);
+            if (sectionName != null)
+                SectionName = sectionName;
+
+            if (file != null)
+                CurrentFile = file; //Initialization done here.
         }
 
 
@@ -217,6 +219,43 @@ namespace BepInEx.Extensions.Configuration
         }
 
         /// <summary>
+        /// Must be called after Instantiation. Initializes the binding process for the ConfigEntries.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="file">The ConfigFile to use</param>
+        /// <param name="sectionName">The SectionName for the model. The Attribute value will be used if left at default.</param>
+        /// <param name="logger">The Logger to be used for debugging.</param>
+        /// <returns>Initialized self.</returns>
+        public T Bind<T>(ConfigFile file = null, string sectionName = null, ManualLogSource logger = null) where T : ConfigFileModel
+        {
+            if (this.alreadyBound)
+            {
+                this.Logger.LogError("Error: ConfigFileModel::Bind() | Bind has already been called once. Please use ChangeConfigFile instead if you wish to change active config files.");
+                return (T)this;
+            }
+
+            if (logger != null)
+                this.Logger = logger;
+
+            if (file == null)
+            {
+                if (this.CurrentFile == null)
+                {
+                    this.Logger.LogError("Error: ConfigFileModel::Bind() | ConfigFile Param is null and CurrentFile was not set via the constructor");
+                    return (T)this;
+                }
+                else
+                {
+                    file = this.CurrentFile;
+                }
+            }
+
+            this.SetCurrentConfigFile(file, sectionName);
+            this.alreadyBound = true;
+            return (T)this;
+        }
+
+        /// <summary>
         /// Internal use only! Sets the currently active config file and runs model initialization.
         /// </summary>
         /// <param name="file">The new config file to set.</param>
@@ -230,17 +269,11 @@ namespace BepInEx.Extensions.Configuration
                     return;
                 }
 
-                CurrentFile = file;
+                _currentFile = file;
 
                 if (sectionName == null)
                 {
-                    sectionName = ((ConfigModelSectionName)this.GetType().GetCustomAttributes(typeof(ConfigModelSectionName), true)[0])?.Value;
-
-                    if (sectionName == null || sectionName == "")
-                    {
-                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string? Model initialization aborted!!");
-                        return;
-                    }
+                    sectionName = this.SectionName;
                 }
 
                 OnModelCreate(file, ref sectionName);   //Pre-Init properties
@@ -351,10 +384,63 @@ namespace BepInEx.Extensions.Configuration
 
         //---Var Defs---//
         protected static ManualLogSource _StaticLogger { get; private set; }
-        protected ManualLogSource Logger { get; set; }
+        public ManualLogSource Logger 
+        {
+            get
+            {
+                if (_logger == null)
+                    _logger = _StaticLogger;
+                return _logger;
+            }
+            set
+            {
+                _logger = value;
+            }
+        }
 
-        protected string SectionName { get; private set; }
-        private ConfigFile CurrentFile { get; set; }
+        private ManualLogSource _logger;
+
+        protected string SectionName 
+        { 
+            get
+            {
+                if (_sectionName == null)
+                {
+                    _sectionName = ((ConfigModelSectionName)this.GetType().GetCustomAttributes(typeof(ConfigModelSectionName), true)[0])?.Value;
+
+                    if (_sectionName == null || _sectionName == "")
+                    {
+                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string? Using 'DefaultSectionName'");
+                        _sectionName =  "DefaultSectionName";
+                    }
+                }
+                return _sectionName;
+            }
+            private set
+            {
+                _sectionName = value;
+            }
+        }
+
+        private string _sectionName;
+        protected ConfigFile CurrentFile 
+        { 
+            get
+            {
+                return _currentFile;
+            }
+            set
+            {
+                if (value == null)
+                    return;
+
+                _currentFile = value;
+            }
+        }
+        private ConfigFile _currentFile;
+
+        private bool alreadyBound = false;
+
         private static MethodInfo CFM_GenericConfigFileBindMethod { get; }
 
         private MethodInfo CFM_GenericOrphanedPropertyPostConfigReloadMethod { get; }

@@ -25,7 +25,7 @@ namespace ConfigModelTests
         {
             try
             {
-                ConfigModelTestModel cmt = new ConfigModelTestModel(file, "TestSection", logger);
+                ConfigModelTestModel cmt = new ConfigModelTestModel(file, "TestSection", logger).Bind<ConfigModelTestModel>();
                 logger.LogInfo($"ModelTesterPlugin::Awake() | TypeOf({nameof(cmt)})={cmt.GetType()}");
                 logger.LogInfo($"ConfigModelTest: ModelName = {cmt.ModelName.Value}");
                 logger.LogInfo($"ConfigModelTest: ModelValue1 = {cmt.ModelValue1.Value}");
