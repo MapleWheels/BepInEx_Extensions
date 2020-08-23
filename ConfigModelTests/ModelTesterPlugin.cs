@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Extensions.Configuration;
 using BepInEx.Logging;
 using ConfigModelTests.Tests;
 using System;
@@ -26,7 +27,11 @@ namespace ConfigModelTests
             try
             {
                 ConfigModelTestModel cmt = new ConfigModelTestModel(file, "TestSection", logger).Bind<ConfigModelTestModel>();  //Option A
-                cmt = new ConfigModelTestModel().Bind<ConfigModelTestModel>(file, "TestSection", logger);  //Option B
+                cmt = new ConfigModelTestModel().Bind<ConfigModelTestModel>(file, "TestSection2", logger);  //Option B
+
+                //Option C
+                ConfigModelTestModel cmt2 = Config.BindModel<ConfigModelTestModel>(logger, "TestSection3");
+
                 logger.LogInfo($"ModelTesterPlugin::Awake() | TypeOf({nameof(cmt)})={cmt.GetType()}");
                 logger.LogInfo($"ConfigModelTest: ModelName = {cmt.ModelName.Value}");
                 logger.LogInfo($"ConfigModelTest: ModelValue1 = {cmt.ModelValue1.Value}");
