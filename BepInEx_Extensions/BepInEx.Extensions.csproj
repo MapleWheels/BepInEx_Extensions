@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Configuration\ConfigFileExtensions.cs" />
     <Compile Include="Configuration\ConfigFileModel.cs" />
     <Compile Include="Configuration\ConfigFileModelAttributes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
