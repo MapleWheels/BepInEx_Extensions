@@ -76,7 +76,8 @@ namespace BepInEx.Extensions.Configuration
         {            
             foreach (PropertyInfo property in CFM_ConfigFileEntryProperties)
             {
-                if (property.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>))
+                if (property.PropertyType.IsGenericType == true &&
+                    property.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>))
                 {
                     try
                     {
@@ -146,13 +147,13 @@ namespace BepInEx.Extensions.Configuration
                             useStandardPropertyBinding
                         };
 
-
+                        instancedGenericPrePropertyBind.Invoke(this, modParams);
 
                         //Reassignment
                         sectionName = (string)modParams[1];
                         key = (string)modParams[2];
                         defaultValue = modParams[3];
-                        cfgDescription = (ConfigDescription)modParams[4];
+                        cfgDescription = (ConfigDescription)modParams[4];   //So ref types still need to be copied..why MS?
                         file = (ConfigFile)modParams[5];
                         useStandardPropertyBinding = (bool)modParams[6];
 
@@ -407,12 +408,17 @@ namespace BepInEx.Extensions.Configuration
             {
                 if (_sectionName == null)
                 {
-                    _sectionName = ((ConfigModelSectionName)this.GetType().GetCustomAttributes(typeof(ConfigModelSectionName), true)[0])?.Value;
+                    object[] attribRaw = this.GetType().GetCustomAttributes(typeof(ConfigModelSectionName), true);
+
+                    if (attribRaw != null && attribRaw[0] != null)
+                    {
+                        _sectionName = ((ConfigModelSectionName)attribRaw[0])?.Value;
+                    }
 
                     if (_sectionName == null || _sectionName == "")
                     {
-                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string? Using 'DefaultSectionName'");
-                        _sectionName =  "DefaultSectionName";
+                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string? Using 'You_Forgot_To_Put_A_Section_Name'");
+                        _sectionName =  "You_Forgot_To_Put_A_Section_Name";
                     }
                 }
                 return _sectionName;
