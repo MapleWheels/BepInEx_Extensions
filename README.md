@@ -20,7 +20,7 @@ This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collec
 **Sample Usage:** 
 
 ```csharp
-[
+[ConfigModelSectionName(Value = "General")] //How you define the section name. 'Default' will be used if this is not set/is missing.
 public CFMExampleModel : ConfigFileModel
 {
 	[ConfigEntryDefaultValue(Value = 10)]   //Default value
