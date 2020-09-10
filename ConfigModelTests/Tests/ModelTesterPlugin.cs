@@ -6,7 +6,7 @@ using ConfigModelTests.Tests;
 using System;
 using System.Reflection;
 
-namespace ConfigModelTests
+namespace ConfigModelTests.Tests
 {
     /// <summary>
     /// A quick test of the ConfigFileModel system. NOTE/TODO: Refactor tests to be more thoughrough. NOTE: Unit Testing package not included to reduce repository bloat. 

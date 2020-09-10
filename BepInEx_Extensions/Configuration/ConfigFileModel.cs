@@ -49,7 +49,7 @@ namespace BepInEx.Extensions.Configuration
             CFM_GenericPostBindMethod = GetType().GetMethod(nameof(PostPropertyBind), BindingFlags.Instance | BindingFlags.NonPublic);
             //The model's ConfigEntry<> properties. Use Reflection to get all of the Property Members.
             CFM_ConfigFileEntryProperties = GetType().GetProperties().Where(
-                prop => prop.PropertyType.IsGenericType == true &&
+                prop => prop.PropertyType.IsGenericType &&
                 prop.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>)
                 ).ToArray();
 
@@ -76,14 +76,13 @@ namespace BepInEx.Extensions.Configuration
         {            
             foreach (PropertyInfo property in CFM_ConfigFileEntryProperties)
             {
-                if (property.PropertyType.IsGenericType == true &&
+                if (property.PropertyType.IsGenericType &&
                     property.PropertyType.GetGenericTypeDefinition() == typeof(ConfigEntry<>))
                 {
                     try
                     {
                         //Get T value from property
                         Type configEntryInstanceType = property.PropertyType.GetGenericArguments()[0];
-                        Logger.LogInfo($"{property.Name}: GenericType Args= {configEntryInstanceType.Name}");
                         //Get the default description and warn/log and set defaults on failure. 
                         string descriptionString = null;
                         object defaultValueRaw = null;
@@ -232,7 +231,7 @@ namespace BepInEx.Extensions.Configuration
         {
             if (this.alreadyBound)
             {
-                this.Logger.LogError("Error: ConfigFileModel::Bind() | Bind has already been called once. Please use ChangeConfigFile instead if you wish to change active config files.");
+                this.Logger.LogWarning("Error: ConfigFileModel::Bind() | Bind has already been called once. Please use ChangeConfigFile instead if you wish to change active config files.");
                 return (T)this;
             }
 
@@ -247,9 +246,8 @@ namespace BepInEx.Extensions.Configuration
                     return (T)this;
                 }
                 else
-                {
                     file = this.CurrentFile;
-                }
+
             }
 
             this.SetCurrentConfigFile(file, sectionName);
@@ -274,9 +272,7 @@ namespace BepInEx.Extensions.Configuration
                 _currentFile = file;
 
                 if (sectionName == null)
-                {
                     sectionName = this.SectionName;
-                }
 
                 OnModelCreate(file, ref sectionName);   //Pre-Init properties
                 InitAndBindConfigs(file, sectionName);  //Init properties
@@ -287,6 +283,7 @@ namespace BepInEx.Extensions.Configuration
 
                 file.SettingChanged -= OnSettingsChanged;
                 file.SettingChanged += OnSettingsChanged;
+                Logger.LogInfo($"ConfigFile Section {sectionName} Initialized.");
             }
             catch (Exception e)
             {
@@ -415,10 +412,10 @@ namespace BepInEx.Extensions.Configuration
                         _sectionName = ((ConfigModelSectionName)attribRaw[0])?.Value;
                     }
 
-                    if (_sectionName == null || _sectionName == "")
+                    if (_sectionName == null || _sectionName.Trim() == "")
                     {
-                        Logger.LogError($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string? Using 'You_Forgot_To_Put_A_Section_Name'");
-                        _sectionName =  "You_Forgot_To_Put_A_Section_Name";
+                        _sectionName = "Default";
+                        Logger.LogWarning($"{GetType().Name} | The ConfigFileModel.SectionName is null or empty. Did you forget the attribute or to pass in a section name string? Using '{_sectionName}'");
                     }
                 }
                 return _sectionName;
