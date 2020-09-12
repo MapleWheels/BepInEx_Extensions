@@ -40,4 +40,23 @@ namespace BepInEx.Extensions.Configuration
     {
         public string Value { get; set; }
     }
+
+    /// <summary>
+    /// Intended for use with ConfigFileModel. Used to define the AcceptableValuesRange that the ConfigEntry<> ConfigDescription will use. Used by ConfigFile.Bind().
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    public class ConfigEntryAcceptableValuesRange : Attribute
+    {
+        public object MinValue { get; set; }
+        public object MaxValue { get; set; }
+    }
+
+    /// <summary>
+    /// Intended for use with ConfigFileModel. Used to define the AcceptableValuesList that the ConfigEntry<> ConfigDescription will use. Used by ConfigFile.Bind().
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    public class ConfigEntryAcceptableValuesList : Attribute
+    {
+        public object[] Values { get; set; }
+    }
 }

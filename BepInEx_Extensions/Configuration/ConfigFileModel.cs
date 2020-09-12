@@ -85,6 +85,7 @@ namespace BepInEx.Extensions.Configuration
                         Type configEntryInstanceType = property.PropertyType.GetGenericArguments()[0];
                         //Get the default description and warn/log and set defaults on failure. 
                         string descriptionString = null;
+                        object[] acceptableValuesDef = null;
                         object defaultValueRaw = null;
                         object defaultValue = null;
                         string key = null;
@@ -105,6 +106,12 @@ namespace BepInEx.Extensions.Configuration
                         }
 
                         ConfigDescription cfgDescription = new ConfigDescription(descriptionString);
+
+                        rawAttributeBuffer = property.GetCustomAttributes(typeof(ConfigEntryAcceptableValuesList), false);
+                        if (rawAttributeBuffer != null && rawAttributeBuffer.Length > 0)
+                        {
+                            
+                        }
 
                         //Get the default value and warn/log and set defaults on failure. 
                         rawAttributeBuffer = property.GetCustomAttributes(typeof(ConfigEntryDefaultValue), false);
