@@ -30,6 +30,8 @@ namespace BepInEx.Extensions.Configuration
 
             //The generic version of ConfigFile.OrphanedEntries, used for ConfigReloaded events.
             ConfigFile_OrphanedEntriesDefinition = typeof(ConfigFile).GetProperty("OrphanedEntries", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            SYS_GenericArrayTypeConverterMethod = typeof(Array).GetMethod(nameof(Array.ConvertAll));
         }
 
         /// <summary>
@@ -110,7 +112,34 @@ namespace BepInEx.Extensions.Configuration
                         rawAttributeBuffer = property.GetCustomAttributes(typeof(ConfigEntryAcceptableValuesList), false);
                         if (rawAttributeBuffer != null && rawAttributeBuffer.Length > 0)
                         {
-                            
+                            object[] acceptableValuesRaw = ((ConfigEntryAcceptableValuesList)rawAttributeBuffer[0]).Values;
+                            Type acceptableValuesRawType = acceptableValuesRaw.GetType();
+
+                            //setting up for call to Array.ConvertAll<TIn, TOut>(TIn[] array, Converter<TIn, TOut>() converter)
+                            Type arrayTypeConverterType = typeof(Converter<,>).MakeGenericType(
+                                    acceptableValuesRawType,
+                                    configEntryInstanceType
+                                );
+
+                            object arrayTypeConverter = Activator.CreateInstance(arrayTypeConverterType);
+
+                            MethodInfo arrayTypeConverterMethod = SYS_GenericArrayTypeConverterMethod.MakeGenericMethod(
+                                    acceptableValuesRawType, 
+                                    configEntryInstanceType
+                                );
+
+                            Type acceptableValuesListType = typeof(AcceptableValueList<>).MakeGenericType(configEntryInstanceType);
+
+                            object[] acceptableValuesListArgs = (object[])arrayTypeConverterMethod.Invoke(null, new object[]
+                            {
+                                acceptableValuesRaw,
+                                arrayTypeConverter
+                            });
+
+                            //Finally instantiate the AcceptableValuesList<T>(params T[] values)
+                            object acceptableValuesInstance = Convert.ChangeType(Activator.CreateInstance(acceptableValuesListType, acceptableValuesListArgs), acceptableValuesListType);
+
+                            cfgDescription = (ConfigDescription)Activator.CreateInstance(typeof(ConfigDescription), descriptionString, acceptableValuesInstance);
                         }
 
                         //Get the default value and warn/log and set defaults on failure. 
@@ -453,10 +482,13 @@ namespace BepInEx.Extensions.Configuration
         private bool alreadyBound = false;
 
         private static MethodInfo CFM_GenericConfigFileBindMethod { get; }
+        private static MethodInfo SYS_GenericArrayTypeConverterMethod { get; }
+
 
         private MethodInfo CFM_GenericOrphanedPropertyPostConfigReloadMethod { get; }
         private MethodInfo CFM_GenericPreBindMethod { get; }
         private MethodInfo CFM_GenericPostBindMethod { get; }
+
 
         private PropertyInfo[] CFM_ConfigFileEntryProperties { get; }
         private static PropertyInfo ConfigFile_OrphanedEntriesDefinition { get; }

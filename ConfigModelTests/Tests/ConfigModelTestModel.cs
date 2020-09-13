@@ -58,7 +58,11 @@ namespace ConfigModelTests.Tests
         [ConfigEntryDefaultValue(Value = 2000)]
         public ConfigEntry<TestEnum> ModelValue8 { get; set; }
 
-        //Constructor call, you normally leave this empty. Optiona, you can use Bind<T> instead to pass the information.
+        [ConfigEntryDescription(Value = "Testing the AcceptableValuesList function.")]
+        [ConfigEntryAcceptableValuesList(Values = new object[] { 10, 20, 30 })]
+        public ConfigEntry<int> testAcceptVaList { get; set; }
+
+        //Constructor call, you normally leave this empty. Optionally, you can use Bind<T> instead to pass the information.
         public ConfigModelTestModel(ConfigFile file = null, string section = null, ManualLogSource logger = null) : base(file, section, logger) { }
 
         //-----Virtual helper method examples-----//

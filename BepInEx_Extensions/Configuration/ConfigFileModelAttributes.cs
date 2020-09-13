@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BepInEx.Configuration;
+using System;
 
 /// <author>PerfidousLeaf | MapleWheels</author>
 /// <date>2020-08-13</date>
@@ -52,10 +53,20 @@ namespace BepInEx.Extensions.Configuration
     }
 
     /// <summary>
-    /// Intended for use with ConfigFileModel. Used to define the AcceptableValuesList that the ConfigEntry<> ConfigDescription will use. Used by ConfigFile.Bind().
+    /// Intended for use with ConfigFileModel. Used to define the AcceptableValuesList(TArgs[] values) that the ConfigEntry<> ConfigDescription will use. Used by ConfigFile.Bind().
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
     public class ConfigEntryAcceptableValuesList : Attribute
+    {
+        public object[] Values { get; set; }       
+    }
+
+
+    /// <summary>
+    /// Intended for use with ConfigFileModel. Used to define the tags that the ConfigEntry<> ConfigDescription will use. Used by ConfigFile.Bind().
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property, AllowMultiple = false)]
+    public class ConfigEntryTags : Attribute
     {
         public object[] Values { get; set; }
     }
