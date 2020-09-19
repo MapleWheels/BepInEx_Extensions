@@ -77,17 +77,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Example\CFMExampleModel.cs" />
-    <Compile Include="Example\CFMExamplePlugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tests\ConfigModelTestModel.cs" />
-    <Compile Include="Tests\ModelTesterPlugin.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx_Extensions\BepInEx.Extensions.csproj">
       <Project>{AB385F7E-40BE-445F-81EC-945E72AC038E}</Project>
       <Name>BepInEx.Extensions</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Example\" />
+    <Folder Include="Tests\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
