@@ -60,7 +60,7 @@ namespace ConfigModelTests.Tests
 
         [ConfigEntryDescription(Value = "Testing the AcceptableValuesList function.")]
         [ConfigEntryAcceptableValuesList(Values = new object[] { 10, 20, 30 })]
-        public ConfigEntry<int> testAcceptVaList { get; set; }
+        public ConfigEntry<int> testAcceptValList { get; set; }
 
         //Constructor call, you normally leave this empty. Optionally, you can use Bind<T> instead to pass the information.
         public ConfigModelTestModel(ConfigFile file = null, string section = null, ManualLogSource logger = null) : base(file, section, logger) { }

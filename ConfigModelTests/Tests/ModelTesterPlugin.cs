@@ -42,6 +42,9 @@ namespace ConfigModelTests.Tests
                 logger.LogInfo($"ConfigModelTest: ModelValue6 = {cmt.ModelValue6.Value}");
                 logger.LogInfo($"ConfigModelTest: ModelValue7 = {cmt.ModelValue7.Value}");
                 logger.LogInfo($"ConfigModelTest: ModelValue8 = {cmt.ModelValue8.Value}");
+
+                //List testing
+                logger.LogInfo($"ConfigModelTest: ModelValue8 = {cmt.testAcceptValList.Value}");
             }
             catch (TargetException te)
             {

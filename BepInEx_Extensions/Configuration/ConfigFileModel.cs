@@ -87,7 +87,6 @@ namespace BepInEx.Extensions.Configuration
                         Type configEntryInstanceType = property.PropertyType.GetGenericArguments()[0];
                         //Get the default description and warn/log and set defaults on failure. 
                         string descriptionString = null;
-                        object[] acceptableValuesDef = null;
                         object defaultValueRaw = null;
                         object defaultValue = null;
                         string key = null;
@@ -112,34 +111,25 @@ namespace BepInEx.Extensions.Configuration
                         rawAttributeBuffer = property.GetCustomAttributes(typeof(ConfigEntryAcceptableValuesList), false);
                         if (rawAttributeBuffer != null && rawAttributeBuffer.Length > 0)
                         {
-                            object[] acceptableValuesRaw = ((ConfigEntryAcceptableValuesList)rawAttributeBuffer[0]).Values;
-                            Type acceptableValuesRawType = acceptableValuesRaw.GetType();
-
-                            //setting up for call to Array.ConvertAll<TIn, TOut>(TIn[] array, Converter<TIn, TOut>() converter)
-                            Type arrayTypeConverterType = typeof(Converter<,>).MakeGenericType(
-                                    acceptableValuesRawType,
-                                    configEntryInstanceType
-                                );
-
-                            object arrayTypeConverter = Activator.CreateInstance(arrayTypeConverterType);
-
-                            MethodInfo arrayTypeConverterMethod = SYS_GenericArrayTypeConverterMethod.MakeGenericMethod(
-                                    acceptableValuesRawType, 
-                                    configEntryInstanceType
-                                );
-
-                            Type acceptableValuesListType = typeof(AcceptableValueList<>).MakeGenericType(configEntryInstanceType);
-
-                            object[] acceptableValuesListArgs = (object[])arrayTypeConverterMethod.Invoke(null, new object[]
+                            
+                        } 
+                        else
+                        {
+                            rawAttributeBuffer = property.GetCustomAttributes(typeof(ConfigEntryAcceptableValuesRange), false);
+                            if (rawAttributeBuffer != null && rawAttributeBuffer.Length > 0)
                             {
-                                acceptableValuesRaw,
-                                arrayTypeConverter
-                            });
+                                object acceptableValRawMin = ((ConfigEntryAcceptableValuesRange)rawAttributeBuffer[0]).MinValue;
+                                object acceptableValRawMax = ((ConfigEntryAcceptableValuesRange)rawAttributeBuffer[0]).MaxValue;
 
-                            //Finally instantiate the AcceptableValuesList<T>(params T[] values)
-                            object acceptableValuesInstance = Convert.ChangeType(Activator.CreateInstance(acceptableValuesListType, acceptableValuesListArgs), acceptableValuesListType);
+                                object acceptableValMin = Convert.ChangeType(acceptableValRawMin, configEntryInstanceType);
+                                object acceptableValMax = Convert.ChangeType(acceptableValRawMax, configEntryInstanceType);
 
-                            cfgDescription = (ConfigDescription)Activator.CreateInstance(typeof(ConfigDescription), descriptionString, acceptableValuesInstance);
+                                Type acceptableValuesRangeType = typeof(AcceptableValueRange<>).MakeGenericType(configEntryInstanceType);
+
+                                object acceptableValuesRangeInstance = Convert.ChangeType(Activator.CreateInstance(acceptableValuesRangeType, acceptableValMin, acceptableValMax), acceptableValuesRangeType);
+
+                                cfgDescription = (ConfigDescription)Activator.CreateInstance(typeof(ConfigDescription), descriptionString, acceptableValuesRangeInstance);
+                            }
                         }
 
                         //Get the default value and warn/log and set defaults on failure. 
@@ -230,6 +220,9 @@ namespace BepInEx.Extensions.Configuration
                 }
             }
         }
+
+        protected virtual T ConvertObjectToType<T>(object input) => (T)Convert.ChangeType(input, typeof(T));
+
 
         /// <summary>
         /// Called when the active ConfigFile has been changed by ChangeConfigFile(). Called after migration is completed.
