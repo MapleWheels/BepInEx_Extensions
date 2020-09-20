@@ -9,6 +9,6 @@ namespace BepInEx.Extensions.Configuration
 {
     public interface IConfigEntryAcceptableValueRangeData<T> where T : System.IComparable
     {
-        AcceptableValueRange<T> AcceptableRange { get; }
+        AcceptableValueRange<T> AcceptableRange { get; set; }
     }
 }

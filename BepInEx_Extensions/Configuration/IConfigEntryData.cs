@@ -10,8 +10,8 @@ namespace BepInEx.Extensions.Configuration
     public interface IConfigEntryData<T>
     {
         ConfigEntry<T> RawEntry { get; set; }
-        T DefaultValue { get; }
-        string DefaultKey { get; }
-        string DescriptionString { get; }
+        T DefaultValue { get; set; }
+        string DefaultKey { get; set; }
+        string DescriptionString { get; set; }
     } 
 }
