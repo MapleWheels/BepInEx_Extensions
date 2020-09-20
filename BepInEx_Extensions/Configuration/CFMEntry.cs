@@ -10,11 +10,11 @@ namespace BepInEx.Extensions.Configuration
     {
         public ConfigEntry<T> RawEntry { get; set; }
         public virtual T Value { get => RawEntry.Value; set => RawEntry.Value = value; }
-        public string DefaultKey { get; } = null;
-        public T DefaultValue { get; } = default(T);
-        public string DescriptionString { get; }
-        public AcceptableValueList<T> AcceptableList { get; }
-        public AcceptableValueRange<T> AcceptableRange { get; }
-        public object[] Tags { get; }
+        public string DefaultKey { get; set; }
+        public T DefaultValue { get; set; }
+        public string DescriptionString { get; set; }
+        public AcceptableValueList<T> AcceptableList { get; set; }
+        public AcceptableValueRange<T> AcceptableRange { get; set; }
+        public object[] Tags { get; set; }
     }
 }

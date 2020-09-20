@@ -9,6 +9,6 @@ namespace BepInEx.Extensions.Configuration
 {
     public interface IConfigEntryTagsData
     {
-        object[] Tags { get; }
+        object[] Tags { get; set; }
     }
 }
