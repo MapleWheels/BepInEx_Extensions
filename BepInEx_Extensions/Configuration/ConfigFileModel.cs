@@ -41,6 +41,38 @@ namespace BepInEx.Extensions.Configuration
         {
             
         }
+
+        #region functions
+        protected void BindModel()
+        {
+            
+        }
+        
+        public void BindToConfig(ConfigFile file, ManualLogSource logger = null)
+        {
+            if (logger != null)
+                this.Logger = logger;
+            this.ActiveConfigFile = file;
+            //Call pre-virts
+            OnModelCreate();
+            //Bind members
+            BindModel();
+            //Call post virts
+        }
+        #endregion
+
+        #region statics
+        public ConfigFileModel()
+        {
+            FI_CFMEntries =
+                GetType().GetFields().Where(
+                    x => x.FieldType.IsGenericType
+                    && x.FieldType.GetGenericTypeDefinition() == typeof(CFMEntry<>)
+                    ).ToArray();
+
+            //TODO: Continue from here.
+        }
+        protected FieldInfo[] FI_CFMEntries;
         #endregion
     }
 }
