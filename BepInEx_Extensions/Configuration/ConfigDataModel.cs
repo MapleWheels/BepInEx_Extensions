@@ -48,6 +48,7 @@ namespace BepInEx.Extensions.Configuration
             
             Config = config;
            
+            //Bind all of the members
             foreach(PropertyInfo prop in BindableConfigDataMembers)
             {
                 try
@@ -62,7 +63,7 @@ namespace BepInEx.Extensions.Configuration
                     else
                     {
                         logger.LogError($"ConfigDataModel::BindModel() | You did not intialize ConfigData {prop.Name} in SetDefaults()! Setting up unbound with defaults.");
-                        iConfigBindablePropVal = Activator.CreateInstance(prop.PropertyType);
+                        iConfigBindablePropVal = Activator.CreateInstance(prop.PropertyType);   //Just to stop NREs
                         prop.SetValue(this, iConfigBindablePropVal, null);
                     }
                 }
