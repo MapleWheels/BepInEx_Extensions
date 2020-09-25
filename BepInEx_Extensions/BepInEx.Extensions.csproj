@@ -81,14 +81,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Configuration\CFMEntry.cs" />
-    <Compile Include="Configuration\CFMExtensions.cs" />
-    <Compile Include="Configuration\ConfigFileModel.cs" />
-    <Compile Include="Configuration\IConfigEntryAcceptableValueListData.cs" />
-    <Compile Include="Configuration\IConfigEntryAcceptableValueRangeData.cs" />
-    <Compile Include="Configuration\IConfigEntryData.cs" />
-    <Compile Include="Configuration\IConfigEntryTagsData.cs" />
-    <Compile Include="Configuration\IConfigModelData.cs" />
+    <Compile Include="Configuration\ConfigData.cs" />
+    <Compile Include="Configuration\ConfigDataModel.cs" />
+    <Compile Include="Configuration\IConfigBindable.cs" />
+    <Compile Include="Configuration\IConfigBindDataProvider.cs" />
+    <Compile Include="Configuration\IConfigData.cs" />
+    <Compile Include="Configuration\IConfigDataBehaviour.cs" />
+    <Compile Include="Configuration\IConfigModelBehaviour.cs" />
+    <Compile Include="Configuration\IConfigModelDataProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
