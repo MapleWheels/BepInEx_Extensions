@@ -112,7 +112,7 @@ namespace BepInEx.Extensions.Configuration
         /// <param name="altKey"></param>
         /// <param name="altDesc"></param>
         /// <param name="altDefaultValue"></param>
-        public void Bind(ConfigFile config, ManualLogSource logger, string altSectionName = null, string altKey = null, string altDesc = null, T altDefaultValue = default)
+        public ConfigData<T> Bind(ConfigFile config, ManualLogSource logger, string altSectionName = null, string altKey = null, string altDesc = null, T altDefaultValue = default)
         {
             //Exception checks
             if (logger == null)
@@ -204,6 +204,7 @@ namespace BepInEx.Extensions.Configuration
             this.Value = arg.Value;
 
             PostBindInternal();
+            return this;
         }
 
         private void PostBindInternal()

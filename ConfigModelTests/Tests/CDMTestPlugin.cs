@@ -24,6 +24,10 @@ namespace ConfigModelTests.Tests
             Logger.LogInfo($"CDM Tests: model.ConfigOption1={model.ConfigOption1.Value}");
             //Unitialised entry test.
             Logger.LogInfo($"CDM Tests: model.ConfigOption2={model.ConfigOption2.Value}");
+            model.ConfigOption2 = new ConfigData<float>()
+            {
+
+            }
         }
     }
 }
