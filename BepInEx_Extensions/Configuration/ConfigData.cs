@@ -10,14 +10,31 @@ namespace BepInEx.Extensions.Configuration
 {
     public class ConfigData<T> : IConfigData<T>
     {
+        public ManualLogSource LogSource { get; set; }
         /// <summary>
         /// The BepInEx ConfigEntry that this property is currently bound to.
         /// </summary>
         public ConfigEntry<T> Entry { get; protected set; }
         public T Value
         {
-            get => Entry.Value;
-            set => Entry.Value = value;
+            get
+            {
+                if (Entry == null)
+                {
+                    LogSource?.LogError($"{Key}: ConfigData.Entry.Value is null. Returning Type Defaults.");
+                    return default;
+                }
+                return Entry.Value;
+            }
+            set
+            {
+                if (Entry == null)
+                {
+                    LogSource?.LogError($"{Key}: ConfigData.Entry.Value is null. No value assigned.");
+                    return;
+                }
+                Entry.Value = value;
+            }
         }
         /// <summary>
         /// The currently bound config file.
@@ -39,7 +56,7 @@ namespace BepInEx.Extensions.Configuration
         /// <summary>
         /// Wrapper for ConfigFile.SettingChanged. Called on BepInEx config reload.
         /// </summary>
-        public event EventHandler OnSettingChanged
+        public virtual event EventHandler OnSettingChanged
         {
             add
             {
@@ -100,8 +117,16 @@ namespace BepInEx.Extensions.Configuration
             //Exception checks
             if (logger == null)
             {
-                logger = Logger.CreateLogSource("default");
-                logger.LogWarning($"ConfigData::Bind() | Logger arg is null! Using 'default'.");
+                if (LogSource == null)
+                {
+                    logger = Logger.CreateLogSource("default");
+                    LogSource = logger;
+                    logger.LogWarning($"ConfigData::Bind() | Logger arg is null! Using 'default'.");
+                }
+                else
+                {
+                    logger = LogSource;
+                }
             }
 
             if (config == null)
@@ -180,8 +205,7 @@ namespace BepInEx.Extensions.Configuration
 
         private void PostBindInternal()
         {
-            //Wrapper
-            Entry.SettingChanged += (object o, EventArgs e) => _OnSettingChangedInternal?.Invoke(o, e);
+            Entry.SettingChanged += (object o, EventArgs e) => this._OnSettingChangedInternal?.Invoke(o, e);
         }
     }
 }

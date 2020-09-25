@@ -18,8 +18,12 @@ namespace ConfigModelTests.Tests
         void Awake()
         {
             model = Config.BindModel<CDTestModel>(Logger);
-            model.ConfigOption1.Value = 100f;
+            Logger.LogInfo($"CDM Tests: model init completed.");
             Logger.LogInfo($"CDM Tests: model.ConfigOption1={model.ConfigOption1.Value}");
+            model.ConfigOption1.Value = 20f;
+            Logger.LogInfo($"CDM Tests: model.ConfigOption1={model.ConfigOption1.Value}");
+            //Unitialised entry test.
+            Logger.LogInfo($"CDM Tests: model.ConfigOption2={model.ConfigOption2.Value}");
         }
     }
 }

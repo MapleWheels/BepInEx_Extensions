@@ -50,20 +50,33 @@ namespace BepInEx.Extensions.Configuration
            
             foreach(PropertyInfo prop in BindableConfigDataMembers)
             {
-                logger.LogWarning($"..BindModel: Prop={prop}");
-
                 try
                 {
-                    prop.PropertyType.GetMethod("Bind")
-                        .Invoke(prop.GetValue(this, BINDFLAGS_CDM, null, null, null), new object[] {
-                        config, Logger, SectionName, prop.Name, null, null
-                    });
+                    object iConfigBindablePropVal = prop.GetValue(this, BINDFLAGS_CDM, null, null, null);
+
+                    if (iConfigBindablePropVal != null)
+                        prop.PropertyType.GetMethod("Bind")
+                            .Invoke(iConfigBindablePropVal, new object[] {
+                            config, Logger, SectionName, prop.Name, null, null
+                        });
+                    else
+                    {
+                        logger.LogError($"ConfigDataModel::BindModel() | You did not intialize ConfigData {prop.Name} in SetDefaults()! Setting up unbound with defaults.");
+                        iConfigBindablePropVal = Activator.CreateInstance(prop.PropertyType);
+                        prop.SetValue(this, iConfigBindablePropVal, null);
+                    }
                 }
                 catch (NullReferenceException e)
                 {
                     logger.LogError($"..BindModel: NRE Error: {e}");
                     logger.LogError($"..BindModel: NRE Base Error: {e.GetBaseException().Message}");
                     logger.LogError($"..BindModel: NRE Stack: {e.StackTrace}");
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"..BindModel: Gen Error: {e}");
+                    logger.LogError($"..BindModel: Gen Base Error: {e.GetBaseException().Message}");
+                    logger.LogError($"..BindModel: Gen Stack: {e.StackTrace}");
                 }
             }
 
@@ -76,24 +89,15 @@ namespace BepInEx.Extensions.Configuration
             if (DefaultsSet)
                 return;
 
-            logger.LogWarning($"ConfigDataModel::Init() invoked.");
-
-
-            BindableConfigDataMembers = GetType().GetProperties(BINDFLAGS_CDM)
+            BindableConfigDataMembers = this.GetType().GetProperties(BINDFLAGS_CDM)
                 .Where(                    
-                    x => 
-                    {
-                        return
-                            x.PropertyType.IsGenericType; //TODO: Implement proper Interface checks  
-                    }
+                    x => x.PropertyType.IsGenericType && typeof(IConfigBindableTypeComparator).IsAssignableFrom(x.PropertyType)
                 ).ToArray();
+            logger?.LogWarning($"BindCDMInfo.Length={BindableConfigDataMembers.Length}");
 
-            logger.LogWarning($"ConfigDataModel::Init() BindableConfigDataMembers={BindableConfigDataMembers}");
-            logger.LogWarning($"ConfigDataModel::Init() BindableConfigDataMembers.Length={BindableConfigDataMembers.Length}");
-
-
+            //Virt call
             SetDefaults();
-
+            //Setup completed
             DefaultsSet = true;
         }
 
@@ -107,9 +111,7 @@ namespace BepInEx.Extensions.Configuration
         public static T BindModel<T>(this ConfigFile config, ManualLogSource logger = null, string sectionName = "Default") where T : class, IConfigModelBehaviour, IConfigModelDataProvider
         {
             T cdm = (T)Activator.CreateInstance(typeof(T), null);
-            logger.LogWarning($"CDMExtensions::BindModel() | pre-bind | cdm={cdm}");
             cdm.BindModel(config, sectionName, logger);
-            logger.LogWarning($"CDMExtensions::BindModel() | post-bind | cdm={cdm}");
             return cdm;
         }
     }

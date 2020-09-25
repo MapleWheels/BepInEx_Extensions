@@ -12,7 +12,7 @@ namespace ConfigModelTests.Tests
     public class CDTestModel : ConfigDataModel
     {
         public ConfigData<float> ConfigOption1 { get; set; }
-        public ConfigData<float> ConfigOption2 { get; set; }
+        public ConfigData<float> ConfigOption2 { get; set; }    //Uninitialised.
 
         public override void SetDefaults()
         {
