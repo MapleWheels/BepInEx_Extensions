@@ -94,7 +94,6 @@ namespace BepInEx.Extensions.Configuration
                 .Where(                    
                     x => x.PropertyType.IsGenericType && typeof(IConfigBindableTypeComparator).IsAssignableFrom(x.PropertyType)
                 ).ToArray();
-            logger?.LogWarning($"BindCDMInfo.Length={BindableConfigDataMembers.Length}");
 
             //Virt call
             SetDefaults();
@@ -109,7 +108,7 @@ namespace BepInEx.Extensions.Configuration
 
     public static class CDMExtensions
     {
-        public static T BindModel<T>(this ConfigFile config, ManualLogSource logger = null, string sectionName = "Default") where T : class, IConfigModelBehaviour, IConfigModelDataProvider
+        public static T BindModel<T>(this ConfigFile config, ManualLogSource logger = null, string sectionName = null) where T : class, IConfigModelBehaviour, IConfigModelDataProvider
         {
             T cdm = (T)Activator.CreateInstance(typeof(T), null);
             cdm.BindModel(config, sectionName, logger);
