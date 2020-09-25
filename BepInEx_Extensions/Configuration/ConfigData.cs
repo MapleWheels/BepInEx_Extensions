@@ -132,7 +132,7 @@ namespace BepInEx.Extensions.Configuration
             if (config == null)
             {
                 logger.LogError($"ConfigData::Bind() | ConfigFile arg is null! Aborting!.");
-                return;
+                return this;
             }
 
             //--Run Pre-Bind code

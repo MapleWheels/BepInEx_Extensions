@@ -22,12 +22,15 @@ namespace ConfigModelTests.Tests
             Logger.LogInfo($"CDM Tests: model.ConfigOption1={model.ConfigOption1.Value}");
             model.ConfigOption1.Value = 20f;
             Logger.LogInfo($"CDM Tests: model.ConfigOption1={model.ConfigOption1.Value}");
-            //Unitialised entry test.
-            Logger.LogInfo($"CDM Tests: model.ConfigOption2={model.ConfigOption2.Value}");
+            //Unitialised entry test, late init.
+            Logger.LogInfo($"CDM Tests Pre-Init: model.ConfigOption2={model.ConfigOption2.Value}");
             model.ConfigOption2 = new ConfigData<float>()
             {
+                DefaultValue = 10f,
+                DescriptionString = "hello"
+            }.Bind(Config, Logger);
+            Logger.LogInfo($"CDM Tests Post-Init: model.ConfigOption2={model.ConfigOption2.Value}");
 
-            }
         }
     }
 }
