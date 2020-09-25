@@ -112,7 +112,7 @@ namespace BepInEx.Extensions.Configuration
         /// <param name="altKey"></param>
         /// <param name="altDesc"></param>
         /// <param name="altDefaultValue"></param>
-        public ConfigData<T> Bind(ConfigFile config, ManualLogSource logger, string altSectionName = null, string altKey = null, string altDesc = null, T altDefaultValue = default)
+        public IConfigBindable<T> Bind(ConfigFile config, ManualLogSource logger, string altSectionName, string altKey, string altDesc, T altDefaultValue)
         {
             //Exception checks
             if (logger == null)
@@ -211,5 +211,11 @@ namespace BepInEx.Extensions.Configuration
         {
             Entry.SettingChanged += (object o, EventArgs e) => this._OnSettingChangedInternal?.Invoke(o, e);
         }
+    }
+
+    public static class CDExtensions
+    {
+        public static ConfigData<T> Bind<T>(this ConfigData<T> configData, ConfigFile config, ManualLogSource logger) =>
+            (ConfigData<T>)((IConfigBindable<T>)configData).Bind(config, logger, null, null, null, default);
     }
 }

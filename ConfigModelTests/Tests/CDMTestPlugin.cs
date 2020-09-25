@@ -27,8 +27,10 @@ namespace ConfigModelTests.Tests
             model.ConfigOption2 = new ConfigData<float>()
             {
                 DefaultValue = 10f,
-                DescriptionString = "hello"
+                DescriptionString = "hello",
+                SectionName = model.SectionName
             }.Bind(Config, Logger);
+
             Logger.LogInfo($"CDM Tests Post-Init: model.ConfigOption2={model.ConfigOption2.Value}");
 
         }
