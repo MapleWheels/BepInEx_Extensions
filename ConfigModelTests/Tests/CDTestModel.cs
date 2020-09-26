@@ -1,14 +1,11 @@
-﻿using BepInEx.Extensions.Configuration;
-using BepInEx.Configuration;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BepInEx.Configuration;
+using BepInEx.Extensions.Configuration;
 
 namespace ConfigModelTests.Tests
 {
+    /// <summary>
+    /// Test model for ConfigDataModel functionality.
+    /// </summary>
     public class CDTestModel : ConfigDataModel
     {
         public ConfigData<float> ConfigOption1 { get; set; }
@@ -29,15 +26,21 @@ namespace ConfigModelTests.Tests
 
             Logger.LogWarning($"Test ConfigData Co1: {ConfigOption1}");
                 
-            ConfigOption1.PreBind += (ConfigFile file, IConfigData<float> cfg) =>
+            ConfigOption1.PreBind += (ConfigFile file) =>
             {
                 Logger?.LogWarning($"Pre bind called for ConfigOption1");
             };
 
-            ConfigOption1.PostBind += (ConfigFile file, IConfigData<float> cfg) =>
+            ConfigOption1.PostBind += (ConfigFile file) =>
             {
-                Logger?.LogWarning($"Test plugin loaded: { cfg.Key } value is { cfg.Value } post-bind");
+                Logger?.LogWarning($"Test plugin loaded: { ConfigOption1.Key } value is { ConfigOption1.Value } post-bind");
             };
+        }
+
+        public override void OnModelCreate(ConfigFile config)
+        {
+            SectionName = "wololoo";
+            Logger?.LogWarning("Debug: CDTestModel::OnModelCreate() was run.");
         }
     }
 }

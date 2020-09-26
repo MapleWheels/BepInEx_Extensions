@@ -32,7 +32,6 @@ namespace ConfigModelTests.Tests
             }.Bind(Config, Logger);
 
             Logger.LogInfo($"CDM Tests Post-Init: model.ConfigOption2={model.ConfigOption2.Value}");
-
         }
     }
 }

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using BepInEx.Configuration;
+﻿using BepInEx.Configuration;
 using BepInEx.Logging;
+
+using System;
 
 namespace BepInEx.Extensions.Configuration
 {
@@ -64,8 +61,14 @@ namespace BepInEx.Extensions.Configuration
         /// </summary>
         public T DefaultValue { get; set; }
 
+        /// <summary>
+        /// Should be assigned an AcceptableValuesRange<> or AcceptableValuesList<>.
+        /// </summary>
         public AcceptableValueBase AcceptableValues { get; set; }
 
+        /// <summary>
+        /// Configuration tags used for add-on plugins such as the Configuration Manager.
+        /// </summary>
         public object[] Tags { get; set; }
 
         private event EventHandler _OnSettingChangedInternal; 
@@ -85,11 +88,11 @@ namespace BepInEx.Extensions.Configuration
             }
         }
 
-        private event Action<ConfigFile, IConfigData<T>> _PreBindInternal;
+        private event Action<ConfigFile> _PreBindInternal;
         /// <summary>
         /// Called right before this config is bound. Can be used to make changes to the config bind info. IConfigData can be casted to ConfigData.
         /// </summary>
-        public virtual event Action<ConfigFile, IConfigData<T>> PreBind
+        public virtual event Action<ConfigFile> PreBind
         {
             add
             {
@@ -102,11 +105,11 @@ namespace BepInEx.Extensions.Configuration
             }
         }
         
-        private event Action<ConfigFile, IConfigData<T>> _PostBindInternal;
+        private event Action<ConfigFile> _PostBindInternal;
         /// <summary>
         /// Called immediately after the config is bound to the ConfigFile. IConfigData can be casted to ConfigData.
         /// </summary>
-        public virtual event Action<ConfigFile, IConfigData<T>> PostBind
+        public virtual event Action<ConfigFile> PostBind
         {
             add
             {
@@ -152,19 +155,7 @@ namespace BepInEx.Extensions.Configuration
             }
 
             //--Run Pre-Bind code
-            //So Invoke reflection makes a shadow copy at some point so even ref types need to be copied back.
-            ConfigData<T> arg = this;
-
-            this._PreBindInternal?.Invoke(config, arg);
-
-            //Reassignment
-            this.Entry = arg.Entry;
-            this.AcceptableValues = arg.AcceptableValues;
-            this.DefaultValue = arg.DefaultValue;
-            this.DescriptionString = arg.DescriptionString;
-            this.Key = arg.Key;
-            this.SectionName = arg.SectionName;
-            this.Tags = arg.Tags;
+            this._PreBindInternal?.Invoke(config);
 
             //Sanity checks
             //Section name
@@ -204,20 +195,9 @@ namespace BepInEx.Extensions.Configuration
             if (this.Entry == null)
                 this.Entry = config.Bind(SectionName, Key, DefaultValue, new ConfigDescription(DescriptionString, AcceptableValues, Tags));
 
-            //Once more, Post-Bind Code
-            arg = this;
+            //Post-Bind event code
 
-            this._PostBindInternal?.Invoke(config, arg);
-
-            //Reassignment
-            this.Entry = arg.Entry;
-            this.AcceptableValues = arg.AcceptableValues;
-            this.DefaultValue = arg.DefaultValue;
-            this.DescriptionString = arg.DescriptionString;
-            this.Key = arg.Key;
-            this.SectionName = arg.SectionName;
-            this.Tags = arg.Tags;
-            this.Value = arg.Value;
+            this._PostBindInternal?.Invoke(config);
 
             PostBindInternal();
             return this;
