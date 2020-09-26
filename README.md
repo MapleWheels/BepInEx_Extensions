@@ -4,47 +4,71 @@
 
 This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collection of various helper functionalities. As of now the current ready-to-use functions it includes are:
 
--  **[Configuration File Model](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/BepInEx_Extensions/Configuration/ConfigFileModel.cs)**: 
-
-	> This was developed in the spirit of *Entity Framework Core*'s Data-Model class.
+- **Configuration File Model**
 	
-	> Includes virtual methods for easy customization of each variable in Pre and Post BepInEx.Configuration.ConfigFile.Bind() and for common ConfigFile events.
+	> Simple, central place to make your configuration files and instantiate them. An up to date example can be found here: [ExamplePlugin](https://github.com/MapleWheels/BepInEx_Extensions/tree/master/BepInEx_Extensions/Example/ExamplePlugin.cs) and [ExampleModel](https://github.com/MapleWheels/BepInEx_Extensions/tree/master/BepInEx_Extensions/Example/ExampleModel.cs)
 	
-	> Allows you to develop an attribute-style configuration file model. **See [CFMExampleModel.cs](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/ConfigModelTests/Example/CFMExampleModel.cs)** for an example model and **See [CFMExamplePlugin.cs](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/ConfigModelTests/Example/CFMExamplePlugin.cs)** for how it's used.
+	> Supports events for migrations/config file changes.
 	
-	> Configuration Reload Event virtual method for handling ConfigEntry<> property members that have failed to be bound to their configuration file entry.
+	> Supports pre-bind and post-bind events for config entries.
 	
-	> Migration: You can now change which ConfigFile a model is using live, including Migration hooks.
+	> Allows you to create your own types/classes, just implement the interfaces and the rest will work.
 
 
 **Sample Usage:** 
 
 ```csharp
-[ConfigModelSectionName(Value = "General")] //How you define the section name. 'Default' will be used if this is not set/is missing.
-public CFMExampleModel : ConfigFileModel
+public class ExampleModel : ConfigDataModel
 {
-	[ConfigEntryDefaultValue(Value = 10)]   //Default value
-    [ConfigEntryDescription(Value = "Here is where you put the description.")]
-    [ConfigEntryKey(Value = "ThisIsACustomNameForTheConfigFile")] //OPTIONAL: You can change the name that this variable is bound to in the config file.
-    public ConfigEntry<int> ConfigVariable1 { get; set; }
+	public ConfigData<float> ConfigOption1 { get; set; } //must be a property.
+	public ConfigData<float> ConfigOption2 { get; set; } = new ConfigData<float>()  //constructor instantiation style.
+	{
+		Key = "Config_Variable_Name",   //This will be set to 'configOption2' if not set by you. Defaults to the variable name.
+		DefaultValue = 10f,
+		DescriptionString = "I'm running out of flavor text",
+		AcceptableValues = new AcceptableValueRange<float>(0f, 50f)
+	};
+	public ConfigData<float> ConfigOption3 { get; set; } //Intentionally left un-initiated. Late bind style.
+
+	public override void SetDefaults()
+	{
+		this.SectionName = "Example Section";   //Define your section name here. 
+
+		//you don't need to define everything here;  DefaultValue and DescriptionString are recommended.
+		this.ConfigOption1 = new ConfigData<float>()    //SetDefaults instantiation style.
+		{
+			DefaultValue = 15f,
+			DescriptionString = "Here's the description for the config file."
+		};
+	}
 }
 
-
-[BepInPlugin("com.example.configModelExample", "Config Model Example", "0.0.0")]
-public class CFMExamplePlugin : BaseUnityPlugin
+[BepInPlugin("dev.cdmtests", "CDM Tests", "0.0.0")]
+public class ExamplePlugin : BaseUnityPlugin
 {
+	ExampleModel model;
+
 	void Awake()
 	{
-		//First instantiate and bind your config file.
-		CFMExampleModel configFileInstance = Config.BindModel<CFMExampleModel>();
+		model = Config.BindModel<ExampleModel>(Logger); //Initialized and ready to use.
+		Logger.LogInfo($"ExamplePlugin: model.ConfigOption1={model.ConfigOption1.Value}");
 
-		//Now use it, it's ready to go!
-		Logger.LogInfo($"Hey, the CFM Example Model works!");
-		Logger.LogInfo($"ConfigVariable1 = {configFileInstance.ConfigVariable1.Value}");
-		
-		//Want to change the active config file (for example, to support profiles)? Rebind it.
-		ConfigFile newConfigFile = new ConfigFile(Path.Combine(Paths.ConfigPath, "custom_config.cfg"), true);
-		configFileInstance.ChangeConfigFile(newConfigFile);
+		model.ConfigOption1.Value = 20f;
+		Logger.LogInfo($"ExamplePlugin: model.ConfigOption1={model.ConfigOption1.Value}");
+
+		//If you didn't initialize an entry in your config model type, or you want to do it externally, you can do so here. 
+		//Late bind style.
+		model.ConfigOption3 = new ConfigData<int>()
+		{
+			DefaultValue = 10,
+			DescriptionString = "hello",
+			SectionName = model.SectionName,
+		}.Bind(Config, Logger); //Late Bind Call
+
+		//Want to change config files for profile support? Easy.
+		ConfigFile profile2 = new ConfigFile(
+			System.IO.Path.Combine(Paths.BepInExConfigPath, "ExamplePlugin", "profile2"), true);	//Profile config file.
+		model.SetConfigFile(profile2);	//New profile active.
 	}
 }
 ```
