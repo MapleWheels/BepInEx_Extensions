@@ -6,9 +6,11 @@ This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collec
 	
 	> Simple, central place to make your configuration files and instantiate them. An up to date example can be found here: [ExamplePlugin](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/ConfigModelTests/Example/ExamplePlugin.cs) and [ExampleModel](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/ConfigModelTests/Example/ExampleModel.cs)
 	
-	> Supports events for migrations/config file changes.
-	
-	> Supports pre-bind and post-bind events for config entries.
+	> Designed to make BepInEx Configuration Files easy to write and instantiate.
+
+	> Includes virtual methods and event hooks for easy customization of each variable in Pre and Post BepInEx.Configuration.ConfigFile.Bind() and for common ConfigFile events.
+
+	> **Migration/Profile Support**: You can now change which ConfigFile a model is using live, including Migration hooks, with sime one-line command.
 	
 	> Allows you to create your own types/classes, just implement the interfaces and the rest will work.
 
