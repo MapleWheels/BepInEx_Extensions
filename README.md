@@ -6,7 +6,7 @@ This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collec
 
 - **Configuration File Model**
 	
-	> Simple, central place to make your configuration files and instantiate them. An up to date example can be found here: [ExamplePlugin](https://github.com/MapleWheels/BepInEx_Extensions/tree/master/BepInEx_Extensions/Example/ExamplePlugin.cs) and [ExampleModel](https://github.com/MapleWheels/BepInEx_Extensions/tree/master/BepInEx_Extensions/Example/ExampleModel.cs)
+	> Simple, central place to make your configuration files and instantiate them. An up to date example can be found here: [ExamplePlugin](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/ConfigModelTests/Example/ExamplePlugin.cs) and [ExampleModel](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/ConfigModelTests/Example/ExampleModel.cs)
 	
 	> Supports events for migrations/config file changes.
 	
