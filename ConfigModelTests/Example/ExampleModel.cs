@@ -10,12 +10,12 @@ using BepInEx.Configuration;
 namespace ConfigModelTests.Example
 {
     /// <summary>
-    /// And example for using the ConfigDataModel and ConfigData types.
+    /// And example for using the ConfigDataModel and ConfigData types. 
     /// </summary>
     public class ExampleModel : ConfigDataModel
     {
         public ConfigData<float> ConfigOption1 { get; set; } //must be a property.
-        public ConfigData<float> ConfigOption2 { get; set; } = new ConfigData<float>()  //constructor instantiation style.
+        public ConfigData<float> ConfigOption2 { get; set; } = new ConfigData<float>()  //constructor instantiation style. You can do this or the SetDefaults style below. Your preference.
         {
             Key = "Config_Variable_Name",   //This will be set to 'configOption2' if not set by you. Defaults to the variable name.
             DefaultValue = 10f,
