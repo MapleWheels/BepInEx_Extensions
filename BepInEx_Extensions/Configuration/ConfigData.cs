@@ -8,6 +8,10 @@ using BepInEx.Logging;
 
 namespace BepInEx.Extensions.Configuration
 {
+    /// <summary>
+    /// Allows you to define config file entries and all of the binding properties. Intended to be declared inside of a class that implements IConfigModelBehaviour.
+    /// </summary>
+    /// <typeparam name="T">the type of the config variable.</typeparam>
     public class ConfigData<T> : IConfigData<T>
     {
         public ManualLogSource LogSource { get; set; }
@@ -40,12 +44,24 @@ namespace BepInEx.Extensions.Configuration
         /// The currently bound config file.
         /// </summary>
         public ConfigFile Config { get => Entry.ConfigFile; }
+        /// <summary>
+        /// The section name this will be bound to when Bind() is called.
+        /// </summary>
         public string SectionName { get; set; }
 
+        /// <summary>
+        /// The description that will be used for the Config Option in the config file entry.
+        /// </summary>
         public string DescriptionString { get; set; }
 
+        /// <summary>
+        /// The key name string that this will be bound to in the config file.
+        /// </summary>
         public string Key { get; set; }
 
+        /// <summary>
+        /// The default value for the config file if none exists already.
+        /// </summary>
         public T DefaultValue { get; set; }
 
         public AcceptableValueBase AcceptableValues { get; set; }
@@ -71,7 +87,7 @@ namespace BepInEx.Extensions.Configuration
 
         private event Action<ConfigFile, IConfigData<T>> _PreBindInternal;
         /// <summary>
-        /// Called right before this config is bound. Can be used to make changes to the config bind info.
+        /// Called right before this config is bound. Can be used to make changes to the config bind info. IConfigData can be casted to ConfigData.
         /// </summary>
         public virtual event Action<ConfigFile, IConfigData<T>> PreBind
         {
@@ -88,7 +104,7 @@ namespace BepInEx.Extensions.Configuration
         
         private event Action<ConfigFile, IConfigData<T>> _PostBindInternal;
         /// <summary>
-        /// Called immediately after the config is bound to the ConfigFile.
+        /// Called immediately after the config is bound to the ConfigFile. IConfigData can be casted to ConfigData.
         /// </summary>
         public virtual event Action<ConfigFile, IConfigData<T>> PostBind
         {

@@ -6,13 +6,7 @@
 
 This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collection of various helper functionalities. As of now the current ready-to-use functions it includes are:
 
--  **[Configuration File Model](https://github.com/MapleWheels/BepInEx_Extensions/blob/master/BepInEx_Extensions/Configuration/ConfigFileModel.cs)**: 
-	
-	> Includes virtual methods for easy customization of each variable in Pre and Post BepInEx.Configuration.ConfigFile.Bind() and for common ConfigFile events.
-	
-	> Configuration Reload Event virtual method for handling ConfigEntry<> property members that have failed to be bound to their configuration file entry.
-	
-	> Migration: You can now change which ConfigFile a model is using live, including Migration hooks.
+- **Configuration File Model**
 
 
 **Sample Usage:** 

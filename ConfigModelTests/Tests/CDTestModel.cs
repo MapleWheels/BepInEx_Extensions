@@ -16,6 +16,8 @@ namespace ConfigModelTests.Tests
 
         public override void SetDefaults()
         {
+            SectionName = "Default";
+
             Logger.LogWarning($"Test ConfigData: SetDefaults started");
 
             ConfigOption1 = new ConfigData<float>()

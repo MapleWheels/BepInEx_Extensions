@@ -80,7 +80,6 @@ namespace BepInEx.Extensions.Configuration
                     logger.LogError($"..BindModel: Gen Stack: {e.StackTrace}");
                 }
             }
-
         }
 
         protected PropertyInfo[] BindableConfigDataMembers;
