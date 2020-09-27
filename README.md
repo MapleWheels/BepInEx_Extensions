@@ -10,7 +10,7 @@ This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collec
 
 	> Includes virtual methods and event hooks for easy customization of each variable in Pre and Post BepInEx.Configuration.ConfigFile.Bind() and for common ConfigFile events.
 
-	> **Migration/Profile Support**: You can now change which ConfigFile a model is using live, including Migration hooks, with sime one-line command.
+	> **Migration/Profile Support**: You can now change which ConfigFile a model is using live, including Migration hooks, with a simple, one-line command.
 	
 	> Allows you to create your own types/classes, just implement the interfaces and the rest will work.
 

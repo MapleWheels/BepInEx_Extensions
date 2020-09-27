@@ -213,5 +213,31 @@ namespace BepInEx.Extensions.Configuration
     {
         public static ConfigData<T> Bind<T>(this ConfigData<T> configData, ConfigFile config, ManualLogSource logger) =>
             (ConfigData<T>)((IConfigBindable<T>)configData).Bind(config, logger, null, null, null, default);
+
+        /// <summary>
+        /// Helper method for subscribing to the ConfigData pre-bind event.
+        /// </summary>
+        /// <typeparam name="T">the ConfigData instance type</typeparam>
+        /// <param name="data">the ConfigData instance.</param>
+        /// <param name="action">Event handle to be invoked.</param>
+        /// <returns></returns>
+        public static ConfigData<T> PreBindSubscribe<T>(this ConfigData<T> data, Action<ConfigFile> action)
+        {
+            data.PreBind += action;
+            return data;
+        }
+
+        /// <summary>
+        /// Helper method for subscribing to the ConfigData post-bind event.
+        /// </summary>
+        /// <typeparam name="T">the ConfigData instance type</typeparam>
+        /// <param name="data">the ConfigData instance.</param>
+        /// <param name="action">Event handle to be invoked.</param>
+        /// <returns></returns>
+        public static ConfigData<T> PostBindSubscribe<T>(this ConfigData<T> data, Action<ConfigFile> action)
+        {
+            data.PostBind += action;
+            return data;
+        }
     }
 }

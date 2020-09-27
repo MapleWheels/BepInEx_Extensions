@@ -1,0 +1,9 @@
+{
+    "name": "BepInExExtensions",
+    "version_number": "0.0.0",
+    "website_url": "https://github.com/MapleWheels/BepInEx_Extensions",
+    "description": "Helper library for making writing ConfigFiles and profile support easy",
+    "dependencies": [
+        "bbepis-BepInExPack-5.3.1"
+    ]
+}
