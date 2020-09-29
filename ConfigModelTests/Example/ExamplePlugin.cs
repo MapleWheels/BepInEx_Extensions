@@ -16,10 +16,12 @@ namespace ConfigModelTests.Example
     [BepInPlugin("dev.cdmtests", "CDM Tests", "0.0.0")]
     public class ExamplePlugin : BaseUnityPlugin
     {
+        //NOTE: Before you read this, please take a look at the ExampleModel.cs file. The below will make a lot more sense if you do.
         ExampleModel model;
 
         void Awake()
         {
+            //NOTE: Before you read this, please take a look at the ExampleModel.cs file. The below will make a lot more sense if you do.
             model = Config.BindModel<ExampleModel>(Logger); //Initialized and ready to use.
 
             Logger.LogInfo($"ExamplePlugin: model init completed.");
@@ -29,7 +31,7 @@ namespace ConfigModelTests.Example
             Logger.LogInfo($"ExamplePlugin: model.ConfigOption2={model.ConfigOption2.Value}");
 
 
-            //If you didn't initialize an entry in your config model type, or you want to do it externally, you can do so here. 
+            //If you didn't initialize an entry in your ConfigDataModel, or you want to do it externally, you can do so here. 
             //If you forgot to do so, you will get back a default version of your ConfigData entry, unbound from any ConfigFile.
             model.ConfigOption3 = new ConfigData<int>()
             {
