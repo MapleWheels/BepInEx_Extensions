@@ -93,10 +93,6 @@
     <Compile Include="Configuration\IConfigDataBehaviour.cs" />
     <Compile Include="Configuration\IConfigModelBehaviour.cs" />
     <Compile Include="Configuration\IConfigModelDataProvider.cs" />
-    <Compile Include="Networking\IConfigSynchronizationProvider.cs" />
-    <Compile Include="Networking\INetSynchronizable.cs" />
-    <Compile Include="Networking\INetworkingProvider.cs" />
-    <Compile Include="Networking\NetworkProviders.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
