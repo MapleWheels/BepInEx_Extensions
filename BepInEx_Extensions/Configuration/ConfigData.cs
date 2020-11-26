@@ -9,7 +9,7 @@ namespace BepInEx.Extensions.Configuration
     /// Allows you to define config file entries and all of the binding properties. Intended to be declared inside of a class that implements IConfigModelBehaviour.
     /// </summary>
     /// <typeparam name="T">the type of the config variable.</typeparam>
-    public class ConfigData<T> : IConfigData<T>
+    public sealed class ConfigData<T> : IConfigData<T>
     {
         public ManualLogSource LogSource { get; set; }
         /// <summary>
@@ -75,7 +75,7 @@ namespace BepInEx.Extensions.Configuration
         /// <summary>
         /// Wrapper for ConfigFile.SettingChanged. Called on BepInEx config reload.
         /// </summary>
-        public virtual event EventHandler OnSettingChanged
+        public event EventHandler OnSettingChanged
         {
             add
             {
@@ -92,7 +92,7 @@ namespace BepInEx.Extensions.Configuration
         /// <summary>
         /// Called right before this config is bound. Can be used to make changes to the config bind info. IConfigData can be casted to ConfigData.
         /// </summary>
-        public virtual event Action<ConfigFile> PreBind
+        public event Action<ConfigFile> PreBind
         {
             add
             {
@@ -109,7 +109,7 @@ namespace BepInEx.Extensions.Configuration
         /// <summary>
         /// Called immediately after the config is bound to the ConfigFile. IConfigData can be casted to ConfigData.
         /// </summary>
-        public virtual event Action<ConfigFile> PostBind
+        public event Action<ConfigFile> PostBind
         {
             add
             {
@@ -211,11 +211,18 @@ namespace BepInEx.Extensions.Configuration
 
         //Extensions
         public static implicit operator T(ConfigData<T> data) => data.Value;
-
     }
 
     public static class CDExtensions
     {
+        /// <summary>
+        /// Binds the ConfigData to the ConfigFile.
+        /// </summary>
+        /// <typeparam name="T">ConfigEntry primitive type</typeparam>
+        /// <param name="configData"></param>
+        /// <param name="config">The Configuration File to bind to.</param>
+        /// <param name="logger">Target for log messages.</param>
+        /// <returns></returns>
         public static ConfigData<T> Bind<T>(this ConfigData<T> configData, ConfigFile config, ManualLogSource logger) =>
             (ConfigData<T>)((IConfigBindable<T>)configData).Bind(config, logger, null, null, null, default);
 

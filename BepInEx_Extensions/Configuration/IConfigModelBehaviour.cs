@@ -8,6 +8,6 @@ namespace BepInEx.Extensions.Configuration
         void SetDefaults();
         void OnModelCreate(ConfigFile Config);
         void SetConfigFile(ConfigFile config);
-        void BindModel(ConfigFile config, string sectionName, ManualLogSource logger);
+        void BindModel(ConfigFile config, string sectionName, ManualLogSource logger);        
     }
 }

@@ -85,8 +85,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BELibraryLoader.cs" />
+    <Compile Include="Configuration\ConfigArray.cs" />
     <Compile Include="Configuration\ConfigData.cs" />
     <Compile Include="Configuration\ConfigDataModel.cs" />
+    <Compile Include="Configuration\IConfigArray.cs" />
     <Compile Include="Configuration\IConfigBindable.cs" />
     <Compile Include="Configuration\IConfigBindDataProvider.cs" />
     <Compile Include="Configuration\IConfigData.cs" />

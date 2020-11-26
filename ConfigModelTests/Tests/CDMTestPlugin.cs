@@ -31,6 +31,11 @@ namespace ConfigModelTests.Tests
             }.Bind(Config, Logger);
 
             Logger.LogInfo($"CDM Tests Post-Init: model.ConfigOption2={model.ConfigOption2.Value}");
+
+            IConfigArray<int> testArray = Config.BindArray<int>(Logger, 
+                size: 20, section: "arraytest", key: "testArray", description: "description", defaultValue: 10);
+            Logger.LogInfo($"Array test, index: 3 | value={ testArray[3].Value }");
+
         }
     }
 }

@@ -15,6 +15,5 @@ namespace BepInEx.Extensions.Configuration
         T DefaultValue { get; set; }
         AcceptableValueBase AcceptableValues { get; set; }
         object[] Tags { get; set; }
-        ConfigEntry<T> Entry { get; }
     }
 }

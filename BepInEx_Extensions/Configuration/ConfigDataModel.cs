@@ -42,6 +42,40 @@ namespace BepInEx.Extensions.Configuration
         /// <param name="config"></param>
         public virtual void OnModelCreate(ConfigFile config) { }
 
+        private event System.Action<ConfigDataModel> PreBindInternal, PostBindInternal;
+        /// <summary>
+        /// Called immediately before the model is bound.
+        /// </summary>
+        public event System.Action<ConfigDataModel> PreBind
+        {
+            add
+            {
+                PreBindInternal -= value;
+                PreBindInternal += value;
+            }
+            remove
+            {
+                PreBindInternal -= value;
+            }
+        }
+
+        /// <summary>
+        /// Called immediately after model is bound.
+        /// </summary>
+        public event System.Action<ConfigDataModel> PostBind
+        {
+            add
+            {
+                PostBindInternal -= value;
+                PostBindInternal += value;
+            }
+            remove
+            {
+                PostBindInternal -= value;
+            }
+        }
+
+
         /// <summary>
         /// Allows you to change the actively bound config file for all members. Intended to help support profile implementation.
         /// </summary>
@@ -83,7 +117,7 @@ namespace BepInEx.Extensions.Configuration
             }
             
             Config = config;
-           
+            this.PreBindInternal?.Invoke(this);
             //Bind all of the members
             foreach(PropertyInfo prop in BindableConfigDataMembers)
             {
@@ -118,6 +152,7 @@ namespace BepInEx.Extensions.Configuration
                     logger.LogError($"..BindModel: Gen Stack: {e.StackTrace}");
                 }
             }
+            this.PostBindInternal?.Invoke(this);
         }
 
         protected PropertyInfo[] BindableConfigDataMembers;
@@ -156,6 +191,27 @@ namespace BepInEx.Extensions.Configuration
         public static T BindModel<T>(this ConfigFile config, ManualLogSource logger = null, string sectionName = null) where T : class, IConfigModelBehaviour
         {
             T cdm = (T)Activator.CreateInstance(typeof(T), null);
+            cdm.BindModel(config, sectionName, logger);
+            return cdm;
+        }
+
+        /// <summary>
+        /// Instantiates and binds a type that implements the IConfigModelBehaviour interface. Intended to be used with ConfigDataModel.
+        /// </summary>
+        /// <typeparam name="T">The config model type.</typeparam>
+        /// <param name="config">The config file to bind to.</param>
+        /// <param name="logger">The log source to be used. Will use the config model type defined logger or "default" if none is provided.</param>
+        /// <param name="sectionName">The section name to be used. The config model type defined section name or "default" if none is provided.</param>
+        /// <param name="preBindDelegate">A delegate to a function to be run immediately before all members are bound.</param>
+        /// <param name="postBindDelegate">A delegate to a function to be run immediately after all members are bound.</param>
+        /// <returns>The new instance of the model, ready to use.</returns>
+        public static T BindModel<T>(this ConfigFile config, System.Action<ConfigDataModel> preBindDelegate, System.Action<ConfigDataModel> postBindDelegate, ManualLogSource logger = null, string sectionName = null) where T : ConfigDataModel
+        {
+            T cdm = (T)Activator.CreateInstance(typeof(T), null);
+            if (preBindDelegate != null)
+                cdm.PreBind += preBindDelegate;
+            if (postBindDelegate != null)
+                cdm.PostBind += postBindDelegate;
             cdm.BindModel(config, sectionName, logger);
             return cdm;
         }

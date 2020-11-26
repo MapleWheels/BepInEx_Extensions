@@ -14,6 +14,6 @@ namespace BepInEx.Extensions
     public static class LibraryInfo
     {
         public const string BepInDependencyID = "com.bepinex.extensions.plugin";
-        public const string PluginVersion = "2.2.2";
+        public const string PluginVersion = "2.2.3";
     }
 }
