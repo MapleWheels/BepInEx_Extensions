@@ -36,6 +36,8 @@ namespace ConfigModelTests.Tests
                 size: 20, section: "arraytest", key: "testArray", description: "description", defaultValue: 10);
             Logger.LogInfo($"Array test, index: 3 | value={ testArray[3].Value }");
 
+            ConfigEntry<bool> test = Config.Bind<bool>("standardInitTest", "test1", false);
+
         }
     }
 }

@@ -97,6 +97,7 @@
     <Compile Include="Configuration\IConfigModelDataProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /y "$(TargetPath)" "D:\Program Files (x86)\SteamLibrary\steamapps\common\Risk of Rain 2\BepInEx\plugins\__dev\BepInEx.Extensions.dll"</PostBuildEvent>

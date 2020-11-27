@@ -90,8 +90,7 @@ namespace BepInEx.Extensions.Configuration
     public static class CAExtensions
     {
         public static ConfigArray<T> BindArray<T>(this ConfigFile file, ManualLogSource logger, int size, string section, string key, string description = "", T defaultValue = default, object[] tags = null) 
-        {
-            return (ConfigArray<T>)new ConfigArray<T>(size).Bind(file, logger, section, key, description, defaultValue, tags);
-        }
+        => (ConfigArray<T>)new ConfigArray<T>(size).Bind(file, logger, section, key, description, defaultValue, tags);
+        
     }
 }
