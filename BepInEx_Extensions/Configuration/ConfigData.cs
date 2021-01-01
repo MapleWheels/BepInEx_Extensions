@@ -15,7 +15,7 @@ namespace BepInEx.Extensions.Configuration
         /// <summary>
         /// The BepInEx ConfigEntry that this property is currently bound to.
         /// </summary>
-        public ConfigEntry<T> Entry { get; protected set; }
+        public ConfigEntry<T> Entry { get; }
         public T Value
         {
             get
