@@ -209,14 +209,14 @@ namespace BepInEx.Extensions.Configuration
                 }
                 catch (NullReferenceException e)
                 {
-                    logger.LogError($"..BindModel: NRE PropMember={field.Name}");
+                    logger.LogError($"..BindModel: NRE FieldMember={field.Name}");
                     logger.LogError($"..BindModel: NRE Error: {e}");
                     logger.LogError($"..BindModel: NRE Base Error: {e.GetBaseException().Message}");
                     logger.LogError($"..BindModel: NRE Stack: {e.StackTrace}");
                 }
                 catch (Exception e)
                 {
-                    logger.LogError($"..BindModel: Gen PropMember={field.Name}");
+                    logger.LogError($"..BindModel: Gen FieldMember={field.Name}");
                     logger.LogError($"..BindModel: Gen Error: {e}");
                     logger.LogError($"..BindModel: Gen Base Error: {e.GetBaseException().Message}");
                     logger.LogError($"..BindModel: Gen Stack: {e.StackTrace}");
@@ -244,14 +244,14 @@ namespace BepInEx.Extensions.Configuration
                 }
                 catch (NullReferenceException e)
                 {
-                    logger.LogError($"..BindModel: NRE PropMember={field.Name}");
+                    logger.LogError($"..BindModel: NRE FieldMember={field.Name}");
                     logger.LogError($"..BindModel: NRE Error: {e}");
                     logger.LogError($"..BindModel: NRE Base Error: {e.GetBaseException().Message}");
                     logger.LogError($"..BindModel: NRE Stack: {e.StackTrace}");
                 }
                 catch (Exception e)
                 {
-                    logger.LogError($"..BindModel: Gen PropMember={field.Name}");
+                    logger.LogError($"..BindModel: Gen FieldMember={field.Name}");
                     logger.LogError($"..BindModel: Gen Error: {e}");
                     logger.LogError($"..BindModel: Gen Base Error: {e.GetBaseException().Message}");
                     logger.LogError($"..BindModel: Gen Stack: {e.StackTrace}");
