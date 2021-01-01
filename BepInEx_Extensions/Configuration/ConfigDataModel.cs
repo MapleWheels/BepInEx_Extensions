@@ -118,8 +118,8 @@ namespace BepInEx.Extensions.Configuration
             
             Config = config;
             this.PreBindInternal?.Invoke(this);
-            //Bind all of the members
-            foreach(PropertyInfo prop in BindableConfigDataMembers)
+            //Bind all of the instance members
+            foreach(PropertyInfo prop in BindableConfigDataProperties)
             {
                 try
                 {
@@ -152,19 +152,140 @@ namespace BepInEx.Extensions.Configuration
                     logger.LogError($"..BindModel: Gen Stack: {e.StackTrace}");
                 }
             }
+
+            //Bind all of the static members
+            foreach (PropertyInfo prop in BindableStaticConfigDataProperties)
+            {
+                try
+                {
+                    object iConfigBindablePropVal = prop.GetValue(null, BINDFLAGS_STATICCDM, null, null, null);
+
+                    if (iConfigBindablePropVal != null)
+                        prop.PropertyType.GetMethod("Bind")
+                            .Invoke(iConfigBindablePropVal, new object[] {
+                            config, Logger, SectionName, prop.Name, null, null
+                        });
+                    else
+                    {
+                        logger.LogError($"ConfigDataModel::BindModel() | You did not intialize static ConfigData {prop.Name} in SetDefaults()! Setting up unbound with defaults.");
+                        iConfigBindablePropVal = Activator.CreateInstance(prop.PropertyType);   //Just to stop NREs
+                        prop.SetValue(null, iConfigBindablePropVal, null);
+                    }
+                }
+                catch (NullReferenceException e)
+                {
+                    logger.LogError($"..BindModel: NRE PropMember={prop.Name}");
+                    logger.LogError($"..BindModel: NRE Error: {e}");
+                    logger.LogError($"..BindModel: NRE Base Error: {e.GetBaseException().Message}");
+                    logger.LogError($"..BindModel: NRE Stack: {e.StackTrace}");
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"..BindModel: Gen PropMember={prop.Name}");
+                    logger.LogError($"..BindModel: Gen Error: {e}");
+                    logger.LogError($"..BindModel: Gen Base Error: {e.GetBaseException().Message}");
+                    logger.LogError($"..BindModel: Gen Stack: {e.StackTrace}");
+                }
+            }
+
+            //Bind all of the instance members
+            foreach (FieldInfo field in BindableConfigDataFields)
+            {
+                try
+                {
+                    object iConfigBindablePropVal = field.GetValue(this);
+
+                    if (iConfigBindablePropVal != null)
+                        field.FieldType.GetMethod("Bind")
+                            .Invoke(iConfigBindablePropVal, new object[] {
+                            config, Logger, SectionName, field.Name, null, null
+                        });
+                    else
+                    {
+                        logger.LogError($"ConfigDataModel::BindModel() | You did not intialize ConfigData {field.Name} in SetDefaults()! Setting up unbound with defaults.");
+                        iConfigBindablePropVal = Activator.CreateInstance(field.FieldType);   //Just to stop NREs
+                        field.SetValue(this, iConfigBindablePropVal);
+                    }
+                }
+                catch (NullReferenceException e)
+                {
+                    logger.LogError($"..BindModel: NRE PropMember={field.Name}");
+                    logger.LogError($"..BindModel: NRE Error: {e}");
+                    logger.LogError($"..BindModel: NRE Base Error: {e.GetBaseException().Message}");
+                    logger.LogError($"..BindModel: NRE Stack: {e.StackTrace}");
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"..BindModel: Gen PropMember={field.Name}");
+                    logger.LogError($"..BindModel: Gen Error: {e}");
+                    logger.LogError($"..BindModel: Gen Base Error: {e.GetBaseException().Message}");
+                    logger.LogError($"..BindModel: Gen Stack: {e.StackTrace}");
+                }
+            }
+
+            //Bind all of the static members
+            foreach (FieldInfo field in BindableStaticConfigDataFields)
+            {
+                try
+                {
+                    object iConfigBindablePropVal = field.GetValue(null);
+
+                    if (iConfigBindablePropVal != null)
+                        field.FieldType.GetMethod("Bind")
+                            .Invoke(iConfigBindablePropVal, new object[] {
+                            config, Logger, SectionName, field.Name, null, null
+                        });
+                    else
+                    {
+                        logger.LogError($"ConfigDataModel::BindModel() | You did not intialize static ConfigData {field.Name} in SetDefaults()! Setting up unbound with defaults.");
+                        iConfigBindablePropVal = Activator.CreateInstance(field.FieldType);   //Just to stop NREs
+                        field.SetValue(null, iConfigBindablePropVal);
+                    }
+                }
+                catch (NullReferenceException e)
+                {
+                    logger.LogError($"..BindModel: NRE PropMember={field.Name}");
+                    logger.LogError($"..BindModel: NRE Error: {e}");
+                    logger.LogError($"..BindModel: NRE Base Error: {e.GetBaseException().Message}");
+                    logger.LogError($"..BindModel: NRE Stack: {e.StackTrace}");
+                }
+                catch (Exception e)
+                {
+                    logger.LogError($"..BindModel: Gen PropMember={field.Name}");
+                    logger.LogError($"..BindModel: Gen Error: {e}");
+                    logger.LogError($"..BindModel: Gen Base Error: {e.GetBaseException().Message}");
+                    logger.LogError($"..BindModel: Gen Stack: {e.StackTrace}");
+                }
+            }
             this.PostBindInternal?.Invoke(this);
         }
 
-        protected PropertyInfo[] BindableConfigDataMembers;
+        protected PropertyInfo[] BindableConfigDataProperties, BindableStaticConfigDataProperties;
+        protected FieldInfo[] BindableConfigDataFields, BindableStaticConfigDataFields;
         
         protected void Init(ManualLogSource logger)
         {
             if (DefaultsSet)
                 return;
 
-            BindableConfigDataMembers = this.GetType().GetProperties(BINDFLAGS_CDM)
+            BindableConfigDataProperties = this.GetType().GetProperties(BINDFLAGS_CDM)
                 .Where(                    
                     x => x.PropertyType.IsGenericType && typeof(IConfigBindableTypeComparator).IsAssignableFrom(x.PropertyType)
+                ).ToArray();
+
+            BindableStaticConfigDataProperties = this.GetType().GetProperties(BINDFLAGS_STATICCDM)
+                .Where(
+                    x => x.PropertyType.IsGenericType && typeof(IConfigBindableTypeComparator).IsAssignableFrom(x.PropertyType)
+                ).ToArray();
+
+            BindableConfigDataFields = this.GetType().GetFields(BINDFLAGS_CDM)
+                .Where(
+                    x => x.FieldType.IsGenericType && typeof(IConfigBindableTypeComparator).IsAssignableFrom(x.FieldType)
+                ).ToArray();
+
+            BindableStaticConfigDataFields = this.GetType().GetFields(BINDFLAGS_STATICCDM)
+                .Where(
+                    x => x.FieldType.IsGenericType && typeof(IConfigBindableTypeComparator).IsAssignableFrom(x.FieldType)
                 ).ToArray();
 
             //Virt call
@@ -174,6 +295,8 @@ namespace BepInEx.Extensions.Configuration
         }
 
         public const BindingFlags BINDFLAGS_CDM = BindingFlags.FlattenHierarchy | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+
+        public const BindingFlags BINDFLAGS_STATICCDM = BindingFlags.FlattenHierarchy | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
 
         public ConfigDataModel() { }    //Activator, default(T) use
     }
