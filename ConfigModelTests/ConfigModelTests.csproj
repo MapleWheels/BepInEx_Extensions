@@ -82,6 +82,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tests\CDMTestPlugin.cs" />
     <Compile Include="Tests\CDTestModel.cs" />
+    <Compile Include="Tests\CDTestStaticModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BepInEx_Extensions\BepInEx.Extensions.csproj">

@@ -2,10 +2,8 @@
 using BepInEx.Logging;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace BepInEx.Extensions.Configuration
 {
@@ -111,8 +109,7 @@ namespace BepInEx.Extensions.Configuration
 
             if (config == null)
             {
-                if (logger != null)
-                    logger.LogError($"Unable to bind model for {GetType().Name}, supplied Config instance is null!");
+                logger?.LogError($"Unable to bind model for {GetType().Name}, supplied Config instance is null!");
                 return;
             }
             

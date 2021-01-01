@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Extensions.Configuration;
-using BepInEx;
 
 namespace ConfigModelTests.Tests
 {
@@ -13,6 +8,7 @@ namespace ConfigModelTests.Tests
     public class CDMTestPlugin : BaseUnityPlugin
     {
         CDTestModel model;
+        CDTestStaticModel model2;
 
         void Awake()
         {
@@ -38,6 +34,10 @@ namespace ConfigModelTests.Tests
 
             ConfigEntry<bool> test = Config.Bind<bool>("standardInitTest", "test1", false);
 
+            model2 = Config.BindModel<CDTestStaticModel>(Logger);
+
+            Logger.LogInfo($"CDM Tests Post-Init: STATIC model2.var1={ (float) CDTestStaticModel.var1 }");
+            Logger.LogInfo($"CDM Tests Post-Init: model2.var2={ (string) model2.var2 }");
         }
     }
 }

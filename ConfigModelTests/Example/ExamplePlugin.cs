@@ -1,12 +1,9 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Extensions.Configuration;
+using BepInEx.Logging;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConfigModelTests.Example
 {
@@ -48,7 +45,7 @@ namespace ConfigModelTests.Example
                 DescriptionString = "hello",
                 SectionName = model.SectionName,
             };
-            model.ConfigOption3.PostBind += (ConfigFile config) =>
+            model.ConfigOption3.PostBind += (ConfigFile config, ManualLogSource logger) =>
             {
                 Logger?.LogInfo("ExamplePlugin: ConfigOption3 is now bound!");
             };

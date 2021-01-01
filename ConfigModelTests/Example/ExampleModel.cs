@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using BepInEx.Extensions.Configuration;
+﻿
 using BepInEx.Configuration;
+using BepInEx.Extensions.Configuration;
+using BepInEx.Logging;
 
 namespace ConfigModelTests.Example
 {
@@ -25,10 +21,10 @@ namespace ConfigModelTests.Example
             DefaultValue = 10f,             //Default value.
             DescriptionString = "I'm running out of flavor text",       //Description
             AcceptableValues = new AcceptableValueRange<float>(0f, 50f)     //Acceptable values
-        }.PreBindSubscribe((ConfigFile file) =>
+        }.PreBindSubscribe((ConfigFile file, ManualLogSource logger) =>
         {
             //OPTIONAL: You can run anything you need to here BEFORE ConfigFile.Bind() is called.
-        }).PostBindSubscribe((ConfigFile file) =>
+        }).PostBindSubscribe((ConfigFile file, ManualLogSource logger) =>
         {
             //OPTIONAL: You can run anything you need to here AFTER ConfigFile.Bind() is called.
         });
@@ -52,13 +48,13 @@ namespace ConfigModelTests.Example
             };
 
             //Want to do something before/after the value is bound? Just hook into an event.
-            ConfigOption1.PreBind += (ConfigFile ConfigToBeBoundTo) =>
+            ConfigOption1.PreBind += (ConfigFile ConfigToBeBoundTo, ManualLogSource logger) =>
             {
                 ConfigOption1.DefaultValue = 18f;
                 Logger?.LogInfo("ConfigOption1 is about to be bound.");
             };
 
-            ConfigOption1.PostBind += (ConfigFile ConfigToBeBoundTo) =>
+            ConfigOption1.PostBind += (ConfigFile ConfigToBeBoundTo, ManualLogSource logger) =>
             {
                 ConfigOption1.DefaultValue = 18f;
                 Logger?.LogInfo("ConfigOption1 is about to be bound.");

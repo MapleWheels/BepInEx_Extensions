@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using BepInEx.Extensions.Configuration;
+using BepInEx.Logging;
 
 namespace ConfigModelTests.Tests
 {
@@ -15,10 +16,10 @@ namespace ConfigModelTests.Tests
             DefaultValue = 10f,
             DescriptionString = "This is config variable#3",
             AcceptableValues = new AcceptableValueRange<float>(0.0f, 100.0f),
-        }.PreBindSubscribe((ConfigFile file) =>
+        }.PreBindSubscribe((ConfigFile file, ManualLogSource logger) =>
         {
 
-        }).PostBindSubscribe((ConfigFile file) =>
+        }).PostBindSubscribe((ConfigFile file, ManualLogSource logger) =>
         {
 
         });
@@ -34,10 +35,10 @@ namespace ConfigModelTests.Tests
                 DefaultValue = 10f,
                 DescriptionString = "This is a config variable",
                 AcceptableValues = new AcceptableValueRange<float>(0.0f, 100.0f),
-            }.PreBindSubscribe((ConfigFile file) =>
+            }.PreBindSubscribe((ConfigFile file, ManualLogSource logger) =>
             {
                 Logger?.LogWarning($"Pre bind called for ConfigOption1");
-            }).PostBindSubscribe((ConfigFile file) =>
+            }).PostBindSubscribe((ConfigFile file, ManualLogSource logger) =>
             {
                 Logger?.LogWarning($"Test plugin loaded: { ConfigOption1.Key } value is { ConfigOption1.Value } post-bind");
             });

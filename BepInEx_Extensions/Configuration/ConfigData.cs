@@ -88,11 +88,11 @@ namespace BepInEx.Extensions.Configuration
             }
         }
 
-        private event Action<ConfigFile> _PreBindInternal;
+        private event Action<ConfigFile, ManualLogSource> _PreBindInternal;
         /// <summary>
         /// Called right before this config is bound. Can be used to make changes to the config bind info. IConfigData can be casted to ConfigData.
         /// </summary>
-        public event Action<ConfigFile> PreBind
+        public event Action<ConfigFile, ManualLogSource> PreBind
         {
             add
             {
@@ -105,11 +105,11 @@ namespace BepInEx.Extensions.Configuration
             }
         }
         
-        private event Action<ConfigFile> _PostBindInternal;
+        private event Action<ConfigFile, ManualLogSource> _PostBindInternal;
         /// <summary>
         /// Called immediately after the config is bound to the ConfigFile. IConfigData can be casted to ConfigData.
         /// </summary>
-        public event Action<ConfigFile> PostBind
+        public event Action<ConfigFile, ManualLogSource> PostBind
         {
             add
             {
@@ -155,7 +155,7 @@ namespace BepInEx.Extensions.Configuration
             }
 
             //--Run Pre-Bind code
-            this._PreBindInternal?.Invoke(config);
+            this._PreBindInternal?.Invoke(config, logger);
 
             //Sanity checks
             //Section name
@@ -197,7 +197,7 @@ namespace BepInEx.Extensions.Configuration
 
             //Post-Bind event code
 
-            this._PostBindInternal?.Invoke(config);
+            this._PostBindInternal?.Invoke(config, logger);
 
             PostBindInternal();
             return this;
@@ -233,7 +233,7 @@ namespace BepInEx.Extensions.Configuration
         /// <param name="data">the ConfigData instance.</param>
         /// <param name="action">Event handle to be invoked.</param>
         /// <returns></returns>
-        public static ConfigData<T> PreBindSubscribe<T>(this ConfigData<T> data, Action<ConfigFile> action)
+        public static ConfigData<T> PreBindSubscribe<T>(this ConfigData<T> data, Action<ConfigFile, ManualLogSource> action)
         {
             data.PreBind += action;
             return data;
@@ -246,7 +246,7 @@ namespace BepInEx.Extensions.Configuration
         /// <param name="data">the ConfigData instance.</param>
         /// <param name="action">Event handle to be invoked.</param>
         /// <returns></returns>
-        public static ConfigData<T> PostBindSubscribe<T>(this ConfigData<T> data, Action<ConfigFile> action)
+        public static ConfigData<T> PostBindSubscribe<T>(this ConfigData<T> data, Action<ConfigFile, ManualLogSource> action)
         {
             data.PostBind += action;
             return data;

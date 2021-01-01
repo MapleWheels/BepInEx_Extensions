@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using BepInEx.Configuration;
-using BepInEx.Extensions.Configuration;
+﻿using BepInEx.Configuration;
 using BepInEx.Logging;
+
+using System;
 
 namespace BepInEx.Extensions.Configuration
 {
