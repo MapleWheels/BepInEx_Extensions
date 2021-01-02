@@ -20,55 +20,55 @@ This [BepInEx Extension library](https://github.com/BepInEx/BepInEx) is a collec
 ```csharp
 public class ExampleModel : ConfigDataModel
 {
-	public ConfigData<float> ConfigOption1 { get; set; } //must be a property.
-	public ConfigData<float> ConfigOption2 { get; set; } = new ConfigData<float>()  //constructor instantiation style.
+	//Notes: 
+	//You do not need to do every single different way here, it's just to show you the different ways it can be used. 
+	//Pick the way that makes sense to you and just use that one.
+
+	public ConfigData<float> ConfigOption1 = new ConfigData<float>()    //SIMPLE/Minimalist setup, using a field.
 	{
-		Key = "Config_Variable_Name",   //This will be set to 'configOption2' if not set by you. Defaults to the variable name.
-		DefaultValue = 10f,
-		DescriptionString = "I'm running out of flavor text",
-		AcceptableValues = new AcceptableValueRange<float>(0f, 50f)
+		DefaultValue = 100f,
+		DescriptionString = "Hello"
 	};
-	public ConfigData<float> ConfigOption3 { get; set; } //Intentionally left un-initiated. Late bind style.
+
+	public ConfigData<float> ConfigOption2 { get; set; } = new ConfigData<float>()  
+	{
+		Key = "Config_Variable_Name",                                   //OPTIONAL: This will be set to 'Config_Variable_Name' in the config file. If not set by you, the default 'Key' name is the variable's name.
+		DefaultValue = 10f,                                             //REQUIRED: Default value.
+		DescriptionString = "I'm running out of flavor text",           //OPTIONAL: Description.
+		AcceptableValues = new AcceptableValueRange<float>(0f, 50f)     //OPTIONAL: Acceptable values.
+	};
+
+	public ConfigData<int> ConfigOption3;       //Nothing defined. This will be bound with the Type defaults.
+
 
 	public override void SetDefaults()
 	{
 		this.SectionName = "Example Section";   //Define your section name here. 
-
-		//you don't need to define everything here;  DefaultValue and DescriptionString are recommended.
-		this.ConfigOption1 = new ConfigData<float>()    //SetDefaults instantiation style.
-		{
-			DefaultValue = 15f,
-			DescriptionString = "Here's the description for the config file."
-		};
 	}
 }
 
 [BepInPlugin("dev.cdmtests", "CDM Tests", "0.0.0")]
 public class ExamplePlugin : BaseUnityPlugin
 {
+	//NOTE: Before you read this, please take a look at the ExampleModel.cs file. The below will make a lot more sense if you do.
 	ExampleModel model;
 
 	void Awake()
 	{
+		//NOTE: Before you read this, please take a look at the ExampleModel.cs file. The below will make a lot more sense if you do.
 		model = Config.BindModel<ExampleModel>(Logger); //Initialized and ready to use.
-		Logger.LogInfo($"ExamplePlugin: model.ConfigOption1={model.ConfigOption1.Value}");
 
-		model.ConfigOption1.Value = 20f;
-		Logger.LogInfo($"ExamplePlugin: model.ConfigOption1={model.ConfigOption1.Value}");
+		Logger.LogInfo($"ExamplePlugin: model init completed.");
+		Logger.LogInfo($"ExamplePlugin: model.ConfigOption1={ model.ConfigOption1.Value }");
 
-		//If you didn't initialize an entry in your config model type, or you want to do it externally, you can do so here. 
-		//Late bind style.
-		model.ConfigOption3 = new ConfigData<int>()
-		{
-			DefaultValue = 10,
-			DescriptionString = "hello",
-			SectionName = model.SectionName,
-		}.Bind(Config, Logger); //Late Bind Call
+		model.ConfigOption2.Value = 20f;                                                              
+		Logger.LogInfo($"ExamplePlugin: model.ConfigOption2={ (float) model.ConfigOption2 }");    //Explicit & implicit conversion is supported.
 
-		//Want to change config files for profile support? Easy.
-		ConfigFile profile2 = new ConfigFile(
-			System.IO.Path.Combine(Paths.BepInExConfigPath, "ExamplePlugin", "profile2"), true);	//Profile config file.
-		model.SetConfigFile(profile2);	//New profile active.
+		Logger.LogInfo($"ExamplePlugin: model.ConfigOption3={ (int) model.ConfigOption3 }");    //All defaults. Value = 0.
+
+		//Want to change config files for profile support?
+		ConfigFile profile2 = new ConfigFile(System.IO.Path.Combine(Paths.BepInExConfigPath, "ExamplePlugin", "profile2"), true);
+		model.SetConfigFile(profile2);
 	}
 }
 ```
