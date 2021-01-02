@@ -22,43 +22,12 @@ namespace ConfigModelTests.Example
             model = Config.BindModel<ExampleModel>(Logger); //Initialized and ready to use.
 
             Logger.LogInfo($"ExamplePlugin: model init completed.");
-            Logger.LogInfo($"ExamplePlugin: model.ConfigOption1={model.ConfigOption1.Value}");
+            Logger.LogInfo($"ExamplePlugin: model.ConfigOption1={ model.ConfigOption1.Value }");
 
-            model.ConfigOption2.Value = 20f;
-            Logger.LogInfo($"ExamplePlugin: model.ConfigOption2={model.ConfigOption2.Value}");
+            model.ConfigOption2.Value = 20f;                                                              
+            Logger.LogInfo($"ExamplePlugin: model.ConfigOption2={ (float) model.ConfigOption2 }");    //Explicit & implicit conversion is supported.
 
-
-            //If you didn't initialize an entry in your ConfigDataModel, or you want to do it externally, you can do so here. 
-            //If you forgot to do so, you will get back a default version of your ConfigData entry, unbound from any ConfigFile.
-            model.ConfigOption3 = new ConfigData<int>()
-            {
-                DefaultValue = 10,
-                DescriptionString = "hello",
-                SectionName = model.SectionName,
-            }.Bind(Config, Logger); //Bind call
-
-            //Or for events
-            model.ConfigOption3 = new ConfigData<int>()
-            {
-                Key = nameof(model.ConfigOption3),      //Have to set this manually as this will not be bound via the ConfigDataModel, instead it will be bound on it's own.
-                DefaultValue = 10,
-                DescriptionString = "hello",
-                SectionName = model.SectionName,
-            };
-            model.ConfigOption3.PostBind += (ConfigFile config, ManualLogSource logger) =>
-            {
-                Logger?.LogInfo("ExamplePlugin: ConfigOption3 is now bound!");
-            };
-            model.ConfigOption3.Bind(Config, Logger);   //Bind call
-
-            model.ConfigOption3.OnSettingChanged += (object o, EventArgs e) =>
-            {
-                Logger?.LogInfo("ExamplePlugin: ConfigOption3 got reloaded!");
-            };
-
-            //Want to access the ConfigEntry<T> used by BepInEx? Use Entry.
-            model.ConfigOption3.Entry.Value = 1;
-            Logger.LogInfo($"ExamplePlugin: model.ConfigOption3={model.ConfigOption3.Value}");
+            Logger.LogInfo($"ExamplePlugin: model.ConfigOption3={ (int) model.ConfigOption3 }");    //All defaults. Value = 0.
 
             //Want to change config files for profile support?
             ConfigFile profile2 = new ConfigFile(System.IO.Path.Combine(Paths.BepInExConfigPath, "ExamplePlugin", "profile2"), true);

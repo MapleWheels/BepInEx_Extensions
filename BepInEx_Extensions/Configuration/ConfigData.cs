@@ -208,7 +208,6 @@ namespace BepInEx.Extensions.Configuration
             Entry.SettingChanged += (object o, EventArgs e) => this._OnSettingChangedInternal?.Invoke(o, e);
         }
 
-
         //Extensions
         public static implicit operator T(ConfigData<T> data) => data.Value;
     }
