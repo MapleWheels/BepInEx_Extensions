@@ -34,10 +34,10 @@ namespace ConfigModelTests.Tests
 
             ConfigEntry<bool> test = Config.Bind<bool>("standardInitTest", "test1", false);
 
-            model2 = Config.BindModel<CDTestStaticModel>(Logger);
+            this.BindAllModels(Logger);
 
             Logger.LogInfo($"CDM Tests Post-Init: STATIC model2.var1={ (float) CDTestStaticModel.var1 }");
-            Logger.LogInfo($"CDM Tests Post-Init: model2.var2={ (string) model2.var2 }");
+            Logger.LogInfo($"CDM Tests Post-Init: STATIC model2.var2={ (string) CDTestStaticModel.var2 }");
         }
     }
 }

@@ -11,10 +11,10 @@ namespace ConfigModelTests.Tests
             DescriptionString = "Testing static fields"
         };
 
-        public ConfigData<string> var2 = new ConfigData<string>()
+        public static ConfigData<string> var2 = new ConfigData<string>()
         {
             DefaultValue = "henlo",
-            DescriptionString = "Testing instance fields"
+            DescriptionString = "Testing static fields"
         };
     }
 }

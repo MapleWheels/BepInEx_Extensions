@@ -5,6 +5,8 @@ using System;
 using System.Linq;
 using System.Reflection;
 
+using System.Collections.Generic;
+
 namespace BepInEx.Extensions.Configuration
 {
     /// <summary>
@@ -327,13 +329,36 @@ namespace BepInEx.Extensions.Configuration
         /// <returns>The new instance of the model, ready to use.</returns>
         public static T BindModel<T>(this ConfigFile config, System.Action<ConfigDataModel> preBindDelegate, System.Action<ConfigDataModel> postBindDelegate, ManualLogSource logger = null, string sectionName = null) where T : ConfigDataModel
         {
-            T cdm = (T)Activator.CreateInstance(typeof(T), null);
+            T cdm = (T)Activator.CreateInstance(typeof(T));
             if (preBindDelegate != null)
                 cdm.PreBind += preBindDelegate;
             if (postBindDelegate != null)
                 cdm.PostBind += postBindDelegate;
             cdm.BindModel(config, sectionName, logger);
             return cdm;
+        }
+
+        public static Dictionary<Type, ConfigDataModel> BindAllModels(this BaseUnityPlugin pluginInstance, ManualLogSource logger = null, System.Action<ConfigDataModel> preBindDelegate = null, System.Action<ConfigDataModel> postBindDelegate = null, string sectionName = null)
+        {
+            Dictionary<Type, ConfigDataModel> models = new Dictionary<Type, ConfigDataModel>();
+
+            Type[] modelTypes = pluginInstance.GetType().Assembly.GetTypes().Where((type) =>
+               type.IsClass && !type.IsAbstract && type.IsSubclassOf(typeof(ConfigDataModel))).ToArray();
+
+            ConfigDataModel model;
+            foreach (Type modelT in modelTypes)
+            {
+                model = (ConfigDataModel)Activator.CreateInstance(modelT);
+                if (preBindDelegate != null)
+                    model.PreBind += preBindDelegate;
+                if (postBindDelegate != null)
+                    model.PostBind += postBindDelegate;
+                model.BindModel(pluginInstance.Config, sectionName, logger);
+
+                models.Add(modelT, model);
+            }
+
+            return models;
         }
     }
 }
